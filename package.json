@@ -1,0 +1,139 @@
+{
+  "name": "sl-geo",
+  "version": "1.0.0",
+  "description": "The definitive, zero-dependency, trilingual (English, සිංහල, தமிழ்) Sri Lanka geographic, postal code, and administrative dataset for TypeScript and JavaScript.",
+  "author": "Mahesh Abeykoon",
+  "license": "MIT",
+  "homepage": "https://github.com/mahesh-abeykoon/sl-geo#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mahesh-abeykoon/sl-geo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mahesh-abeykoon/sl-geo/issues"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./provinces": {
+      "import": {
+        "types": "./dist/provinces.d.ts",
+        "default": "./dist/provinces.js"
+      },
+      "require": {
+        "types": "./dist/provinces.d.cts",
+        "default": "./dist/provinces.cjs"
+      }
+    },
+    "./districts": {
+      "import": {
+        "types": "./dist/districts.d.ts",
+        "default": "./dist/districts.js"
+      },
+      "require": {
+        "types": "./dist/districts.d.cts",
+        "default": "./dist/districts.cjs"
+      }
+    },
+    "./cities": {
+      "import": {
+        "types": "./dist/cities.d.ts",
+        "default": "./dist/cities.js"
+      },
+      "require": {
+        "types": "./dist/cities.d.cts",
+        "default": "./dist/cities.cjs"
+      }
+    },
+    "./divisions": {
+      "import": {
+        "types": "./dist/divisions.d.ts",
+        "default": "./dist/divisions.js"
+      },
+      "require": {
+        "types": "./dist/divisions.d.cts",
+        "default": "./dist/divisions.cjs"
+      }
+    },
+    "./banks": {
+      "import": {
+        "types": "./dist/banks.d.ts",
+        "default": "./dist/banks.js"
+      },
+      "require": {
+        "types": "./dist/banks.d.cts",
+        "default": "./dist/banks.cjs"
+      }
+    },
+    "./validators": {
+      "import": {
+        "types": "./dist/validators.d.ts",
+        "default": "./dist/validators.js"
+      },
+      "require": {
+        "types": "./dist/validators.d.cts",
+        "default": "./dist/validators.cjs"
+      }
+    },
+    "./gn": {
+      "import": {
+        "types": "./dist/gn.d.ts",
+        "default": "./dist/gn.js"
+      },
+      "require": {
+        "types": "./dist/gn.d.cts",
+        "default": "./dist/gn.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "sri lanka",
+    "postal code",
+    "postcode",
+    "cities",
+    "districts",
+    "provinces",
+    "divisional secretariat",
+    "grama niladhari",
+    "colombo",
+    "sinhala",
+    "tamil",
+    "lankapay",
+    "banks",
+    "address autocomplete",
+    "checkout"
+  ],
+  "scripts": {
+    "build:data": "node scripts/build-datasets.mjs",
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "tsup": "^8.0.2",
+    "tsx": "^4.23.13",
+    "typescript": "^5.3.3",
+    "vitest": "^1.3.1"
+  }
+}
