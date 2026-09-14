@@ -1,5 +1,3 @@
-import { CITIES } from './cities';
-
 export interface ParsedNIC {
   isValid: boolean;
   nic: string;
@@ -28,8 +26,11 @@ export interface ParsedPhone {
 const MONTH_DAYS = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
 /**
- * Validate and parse Sri Lankan National Identity Card (NIC) numbers.
- * Supports both Old NIC (9 digits + V/X) and New NIC (12 digits).
+ * Parses a Sri Lankan National Identity Card (NIC) number.
+ * Supports both old (9 digits + V/X) and new (12 digits) formats.
+ *
+ * @param nic - NIC string to parse.
+ * @returns ParsedNIC object with extracted demographic fields, or null if invalid.
  */
 export function parseNIC(nic: string): ParsedNIC | null {
   if (!nic || typeof nic !== 'string') return null;
@@ -101,14 +102,19 @@ export function parseNIC(nic: string): ParsedNIC | null {
 }
 
 /**
- * Returns true if the string is a valid Sri Lankan NIC.
+ * Validates whether the given string is a valid Sri Lankan NIC.
+ *
+ * @param nic - NIC string to validate.
  */
 export function validateNIC(nic: string): boolean {
   return parseNIC(nic) !== null;
 }
 
 /**
- * Convert an Old 10-digit NIC (e.g. 952134567V) to the New 12-digit format (199521304567).
+ * Converts a 10-character Old NIC format (e.g. '952134567V') to the 12-digit New standard.
+ *
+ * @param oldNic - 10-character NIC string.
+ * @returns 12-digit NIC string, or null if invalid.
  */
 export function convertOldNICToNew(oldNic: string): string | null {
   const parsed = parseNIC(oldNic);
@@ -162,8 +168,11 @@ const AREA_CODES: Record<string, string> = {
 };
 
 /**
- * Validate and format Sri Lankan telephone numbers (mobile & fixed line).
- * Accepts: +94771234567, 0771234567, 94771234567, 077 123 4567, etc.
+ * Parses and validates Sri Lankan telephone numbers (mobile and fixed-line).
+ * Supports international (+94), local (07X, 011), and plain 9-digit formats.
+ *
+ * @param phone - Phone number string.
+ * @returns ParsedPhone object or null if invalid.
  */
 export function parsePhone(phone: string): ParsedPhone | null {
   if (!phone || typeof phone !== 'string') return null;
@@ -215,14 +224,19 @@ export function parsePhone(phone: string): ParsedPhone | null {
 }
 
 /**
- * Validate Sri Lankan phone number.
+ * Validates whether the given string is a valid Sri Lankan phone number.
+ *
+ * @param phone - Phone number string.
  */
 export function validatePhone(phone: string): boolean {
   return parsePhone(phone) !== null;
 }
 
 /**
- * Format a Sri Lankan phone number to E.164 standard (+947XXXXXXXX).
+ * Formats a Sri Lankan phone number.
+ *
+ * @param phone - Phone number string.
+ * @param style - Format style ('international' | 'local' | 'e164'). Default is 'local'.
  */
 export function formatPhone(phone: string, style: 'international' | 'local' | 'e164' = 'local'): string | null {
   const parsed = parsePhone(phone);
@@ -231,11 +245,17 @@ export function formatPhone(phone: string, style: 'international' | 'local' | 'e
 }
 
 /**
- * Check whether a postal code exists and matches Sri Lankan postal standards (5 digits).
+ * Validates whether a string matches the Sri Lankan 5-digit postal code format.
+ * To check if a code exists in the official postal database, use `isValidPostalCode()`.
+ *
+ * @param postalCode - Postal code string.
+ *
+ * @example
+ * validatePostalCode('00100') // => true
+ * validatePostalCode('123')   // => false
  */
 export function validatePostalCode(postalCode: string): boolean {
   if (!postalCode || typeof postalCode !== 'string') return false;
   const clean = postalCode.trim();
-  if (!/^\d{5}$/.test(clean)) return false;
-  return CITIES.some((c) => c.postal_code === clean);
+  return /^\d{5}$/.test(clean);
 }
