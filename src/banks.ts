@@ -43,7 +43,9 @@ export function getBanks(): readonly Bank[] {
 }
 
 /**
- * Direct O(1) lookup of a bank by its CBSL 4-digit bank code or ID.
+ * Finds a bank by its CBSL 4-digit code or internal ID.
+ *
+ * @param codeOrId - 4-digit CBSL bank code (e.g. '7010') or ID.
  *
  * @example
  * getBank('7010') // => Bank of Ceylon
@@ -54,10 +56,17 @@ export function getBank(codeOrId: string | number): Bank | undefined {
   return BANK_MAP.get(raw.padStart(4, '0')) || BANK_MAP.get(raw) || BANK_MAP.get(raw.toLowerCase());
 }
 
+/**
+ * Alias for getBank.
+ *
+ * @see getBank
+ */
 export const getBankByCode = getBank;
 
 /**
- * Get all branches for a given bank in O(1).
+ * Returns all branches for a given bank.
+ *
+ * @param bankCode - 4-digit CBSL bank code.
  */
 export function getBranches(bankCode: string | number): readonly Branch[] {
   const bank = getBank(bankCode);
@@ -65,7 +74,10 @@ export function getBranches(bankCode: string | number): readonly Branch[] {
 }
 
 /**
- * Direct O(1) lookup of a bank branch by bank code and branch code.
+ * Finds a bank branch by bank code and 3-digit branch code.
+ *
+ * @param bankCode - 4-digit CBSL bank code.
+ * @param branchCode - 3-digit branch code.
  */
 export function getBranch(bankCode: string | number, branchCode: string | number): Branch | undefined {
   if (bankCode === undefined || branchCode === undefined) return undefined;
@@ -74,10 +86,18 @@ export function getBranch(bankCode: string | number, branchCode: string | number
   return BRANCH_MAP.get(`${bCode}:${brCode}`);
 }
 
+/**
+ * Alias for getBranch.
+ *
+ * @see getBranch
+ */
 export const getBranchByCode = getBranch;
 
 /**
- * Search branches within a bank by name or branch code.
+ * Searches branches within a bank by name or branch code.
+ *
+ * @param bankCode - 4-digit CBSL bank code.
+ * @param query - Branch name or code query.
  */
 export function searchBranches(bankCode: string | number, query: string): Branch[] {
   const branches = getBranches(bankCode);

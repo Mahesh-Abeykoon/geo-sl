@@ -13,6 +13,12 @@ export const DIVISIONS: readonly Division[] = Object.freeze(
   )
 );
 
+/**
+ * Returns Divisional Secretariat (DS) divisions, optionally filtered by district.
+ *
+ * @param districtOrOptions - District name or query options.
+ * @param options - Query options if district was specified as first argument.
+ */
 export function getDivisions(
   districtOrOptions?: string | QueryOptions,
   options?: QueryOptions
@@ -40,6 +46,12 @@ export function getDivisions(
   }));
 }
 
+/**
+ * Returns all Divisional Secretariat (DS) divisions in a district.
+ *
+ * @param district - District name (e.g. 'Colombo').
+ * @param options - Query options including language selection.
+ */
 export function getDivisionsByDistrict(
   district: string,
   options?: QueryOptions
@@ -47,6 +59,12 @@ export function getDivisionsByDistrict(
   return getDivisions(district, options);
 }
 
+/**
+ * Returns all Divisional Secretariat (DS) divisions in a province.
+ *
+ * @param province - Province name (e.g. 'Western').
+ * @param options - Query options including language selection.
+ */
 export function getDivisionsByProvince(
   province: string,
   options?: QueryOptions

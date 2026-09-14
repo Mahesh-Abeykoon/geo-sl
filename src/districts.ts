@@ -46,13 +46,14 @@ for (const d of DISTRICTS) {
   BY_PROVINCE_MAP.get(d.province_id)!.push(d);
 }
 
-// Freeze the arrays in the province map
 for (const [k, arr] of BY_PROVINCE_MAP.entries()) {
   BY_PROVINCE_MAP.set(k, Object.freeze(arr) as any);
 }
 
 /**
- * Direct O(1) lookup of a District by code (e.g. 'CO'), id ('5'), or English name ('Colombo').
+ * Finds a district by abbreviation (e.g. 'CO'), ID ('5'), or English name ('Colombo').
+ *
+ * @param codeOrId - District code, ID, or name.
  */
 export function getDistrict(codeOrId: DistrictCode | string): District | undefined {
   if (!codeOrId || typeof codeOrId !== 'string') return undefined;
@@ -61,7 +62,10 @@ export function getDistrict(codeOrId: DistrictCode | string): District | undefin
 }
 
 /**
- * Direct helper to get a localized District name in English, Sinhala, or Tamil.
+ * Returns the localized district name for a given district code or ID.
+ *
+ * @param codeOrId - District code or ID.
+ * @param lang - Target language ('en' | 'si' | 'ta'). Default is 'en'.
  *
  * @example
  * getDistrictName('KY', 'si') // => "මහනුවර"
@@ -76,7 +80,9 @@ export function getDistrictName(codeOrId: DistrictCode | string, lang: Language 
 }
 
 /**
- * Backward-compatible alias for getDistrict()
+ * Alias for getDistrict.
+ *
+ * @see getDistrict
  */
 export function getDistrictByCode(code: string, options?: QueryOptions): District | undefined {
   const d = getDistrict(code);
@@ -90,7 +96,10 @@ export function getDistrictByCode(code: string, options?: QueryOptions): Distric
 }
 
 /**
- * Get all districts for a given province (by code like 'WP' or name like 'Western') in O(1).
+ * Returns all districts in the specified province.
+ *
+ * @param province - Province code (e.g. 'WP') or province name.
+ * @param options - Query options including language selection.
  */
 export function getDistrictsByProvince(province: ProvinceCode | string, options?: QueryOptions): readonly District[] {
   if (!province || typeof province !== 'string') return [];
@@ -107,7 +116,10 @@ export function getDistrictsByProvince(province: ProvinceCode | string, options?
 }
 
 /**
- * Returns districts. Zero allocations when called without arguments.
+ * Returns all 25 districts of Sri Lanka, optionally filtered by province.
+ *
+ * @param provinceOrOptions - Province code/name or query options.
+ * @param options - Query options if province was specified as first argument.
  */
 export function getDistricts(
   provinceOrOptions?: string | QueryOptions,

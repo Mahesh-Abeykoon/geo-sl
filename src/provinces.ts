@@ -29,7 +29,9 @@ for (const p of PROVINCES) {
 }
 
 /**
- * Direct O(1) lookup of a Province by code (e.g. 'WP'), id ('1'), or English name ('Western').
+ * Finds a province by code (e.g. 'WP'), ID ('1'), or English name ('Western').
+ *
+ * @param codeOrId - Province code, ID, or name.
  */
 export function getProvince(codeOrId: ProvinceCode | string): Province | undefined {
   if (!codeOrId || typeof codeOrId !== 'string') return undefined;
@@ -38,7 +40,10 @@ export function getProvince(codeOrId: ProvinceCode | string): Province | undefin
 }
 
 /**
- * Direct helper to get a localized Province name in English, Sinhala, or Tamil.
+ * Returns the localized province name for a given province code or ID.
+ *
+ * @param codeOrId - Province code or ID.
+ * @param lang - Target language ('en' | 'si' | 'ta'). Default is 'en'.
  *
  * @example
  * getProvinceName('WP', 'si') // => "බස්නාහිර"
@@ -53,7 +58,9 @@ export function getProvinceName(codeOrId: ProvinceCode | string, lang: Language 
 }
 
 /**
- * Backward-compatible alias for getProvince()
+ * Alias for getProvince.
+ *
+ * @see getProvince
  */
 export function getProvinceByCode(code: string, options?: QueryOptions): Province | undefined {
   const p = getProvince(code);
@@ -67,7 +74,9 @@ export function getProvinceByCode(code: string, options?: QueryOptions): Provinc
 }
 
 /**
- * Returns all 9 provinces. Zero allocations when called without language options.
+ * Returns all 9 provinces of Sri Lanka.
+ *
+ * @param optionsOrLang - Query options or language code.
  */
 export function getProvinces(optionsOrLang?: QueryOptions | Language): readonly Province[] | Province[] {
   const lang = typeof optionsOrLang === 'string' ? optionsOrLang : optionsOrLang?.lang;
