@@ -90,6 +90,7 @@ export interface Division {
 
 export interface GNDivision {
   code: string;
+  name: string;
   name_en: string;
   name_si: string;
   name_ta: string;

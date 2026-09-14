@@ -2,7 +2,17 @@ import gnData from './data/gn.json';
 import type { GNDivision, GNSearchOptions, Language, QueryOptions } from './types';
 
 export const GN_DIVISIONS: readonly GNDivision[] = Object.freeze(
-  (gnData as GNDivision[]).map((g) => Object.freeze({ ...g }))
+  (gnData as any[]).map((g) =>
+    Object.freeze({
+      code: g.code,
+      name: g.name_en,
+      name_en: g.name_en,
+      name_si: g.name_si,
+      name_ta: g.name_ta,
+      division: g.division,
+      district: g.district
+    })
+  )
 );
 
 const CODE_MAP = new Map<string, GNDivision>();
@@ -24,7 +34,6 @@ for (const gn of GN_DIVISIONS) {
   DISTRICT_MAP.get(distKey)!.push(gn);
 }
 
-// Freeze arrays
 for (const [k, arr] of DSD_MAP.entries()) {
   DSD_MAP.set(k, Object.freeze(arr) as any);
 }
@@ -33,7 +42,9 @@ for (const [k, arr] of DISTRICT_MAP.entries()) {
 }
 
 /**
- * Returns all Grama Niladhari (GN) divisions. Zero allocations when called without language.
+ * Returns all Grama Niladhari (GN) divisions in Sri Lanka.
+ *
+ * @param optionsOrLang - Query options or language code ('en' | 'si' | 'ta').
  */
 export function getGNDivisions(optionsOrLang?: QueryOptions | Language): readonly GNDivision[] | GNDivision[] {
   const lang = typeof optionsOrLang === 'string' ? optionsOrLang : optionsOrLang?.lang;
@@ -41,12 +52,15 @@ export function getGNDivisions(optionsOrLang?: QueryOptions | Language): readonl
 
   return GN_DIVISIONS.map((gn) => ({
     ...gn,
-    name_en: lang === 'si' ? gn.name_si : lang === 'ta' ? gn.name_ta : gn.name_en
+    name: lang === 'si' ? gn.name_si : lang === 'ta' ? gn.name_ta : gn.name_en
   }));
 }
 
 /**
- * Direct O(1) lookup of Grama Niladhari divisions by Divisional Secretariat (DS) Division.
+ * Returns all Grama Niladhari divisions within a Divisional Secretariat (DS) division.
+ *
+ * @param divisionName - DS division name (e.g. 'Colombo').
+ * @param options - Query options including language selection.
  */
 export function getGNDivisionsByDSD(divisionName: string, options?: QueryOptions): readonly GNDivision[] {
   if (!divisionName) return [];
@@ -58,12 +72,15 @@ export function getGNDivisionsByDSD(divisionName: string, options?: QueryOptions
 
   return list.map((gn) => ({
     ...gn,
-    name_en: lang === 'si' ? gn.name_si : lang === 'ta' ? gn.name_ta : gn.name_en
+    name: lang === 'si' ? gn.name_si : lang === 'ta' ? gn.name_ta : gn.name_en
   }));
 }
 
 /**
- * Direct O(1) lookup of Grama Niladhari divisions by District name.
+ * Returns all Grama Niladhari divisions within a district.
+ *
+ * @param districtName - District name (e.g. 'Kandy').
+ * @param options - Query options including language selection.
  */
 export function getGNDivisionsByDistrict(districtName: string, options?: QueryOptions): readonly GNDivision[] {
   if (!districtName) return [];
@@ -75,12 +92,15 @@ export function getGNDivisionsByDistrict(districtName: string, options?: QueryOp
 
   return list.map((gn) => ({
     ...gn,
-    name_en: lang === 'si' ? gn.name_si : lang === 'ta' ? gn.name_ta : gn.name_en
+    name: lang === 'si' ? gn.name_si : lang === 'ta' ? gn.name_ta : gn.name_en
   }));
 }
 
 /**
- * Direct O(1) lookup of a Grama Niladhari division by its GN code.
+ * Finds a Grama Niladhari division by its administrative GN code.
+ *
+ * @param code - GN division code.
+ * @param options - Query options including language selection.
  */
 export function findGNByCode(code: string, options?: QueryOptions): GNDivision | undefined {
   if (!code) return undefined;
@@ -92,12 +112,15 @@ export function findGNByCode(code: string, options?: QueryOptions): GNDivision |
 
   return {
     ...match,
-    name_en: lang === 'si' ? match.name_si : lang === 'ta' ? match.name_ta : match.name_en
+    name: lang === 'si' ? match.name_si : lang === 'ta' ? match.name_ta : match.name_en
   };
 }
 
 /**
- * Fuzzy search across Grama Niladhari divisions by name (English, Sinhala, Tamil) or GN code.
+ * Searches Grama Niladhari divisions by name (English, Sinhala, Tamil) or GN code.
+ *
+ * @param query - Search term.
+ * @param options - Search options including limit, division, district, and language.
  */
 export function searchGN(query: string, options?: GNSearchOptions): GNDivision[] {
   if (!query || query.trim() === '') return [];
@@ -127,7 +150,7 @@ export function searchGN(query: string, options?: GNSearchOptions): GNDivision[]
           ? gn
           : {
               ...gn,
-              name_en: lang === 'si' ? gn.name_si : lang === 'ta' ? gn.name_ta : gn.name_en
+              name: lang === 'si' ? gn.name_si : lang === 'ta' ? gn.name_ta : gn.name_en
             }
       );
 

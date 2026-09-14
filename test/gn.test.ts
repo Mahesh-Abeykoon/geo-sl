@@ -44,4 +44,17 @@ describe('Grama Niladhari (GN) Divisions', () => {
     const taSearch = searchGN('மட்டக்குளி');
     expect(taSearch.length).toBeGreaterThan(0);
   });
+
+  it('should preserve name_en and populate localized name when lang option is specified', () => {
+    const listSi = getGNDivisions({ lang: 'si' });
+    const firstSi = listSi[0];
+    expect(firstSi.name).toBe(firstSi.name_si);
+    // name_en must remain in English!
+    expect(firstSi.name_en).not.toBe(firstSi.name_si);
+
+    const matchTa = findGNByCode('005', { lang: 'ta' });
+    expect(matchTa).toBeDefined();
+    expect(matchTa?.name).toBe(matchTa?.name_ta);
+    expect(matchTa?.name_en).toBe('Sammanthranapura');
+  });
 });
