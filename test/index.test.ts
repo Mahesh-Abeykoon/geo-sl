@@ -21,11 +21,14 @@ import {
   getCascadingData,
   getDivisions,
   getDivisionsByDistrict,
+  getName,
+  isValidPostalCode
+} from '../src/index';
+import {
   getBanks,
   getBankByCode,
-  getBranches,
-  getName
-} from '../src/index';
+  getBranches
+} from '../src/banks';
 
 describe('Provinces', () => {
   it('should return exactly 9 provinces', () => {
@@ -131,9 +134,19 @@ describe('Cities & Postal Codes', () => {
     expect(jaffna?.district).toBe('Jaffna');
   });
 
-  it('should get postal code by city name', () => {
-    const code = getPostalCode('Athurugiriya');
-    expect(code).toBe('10150');
+  it('should get postal code by city name and handle zero-padded number variations', () => {
+    expect(getPostalCode('Athurugiriya')).toBe('10150');
+    expect(getPostalCode('Colombo 1')).toBe('00100');
+    expect(getPostalCode('Colombo 01')).toBe('00100');
+    expect(getPostalCode('colombo')).toBe('00100');
+  });
+
+  it('should verify postal code existence with isValidPostalCode()', () => {
+    expect(isValidPostalCode('00100')).toBe(true);
+    expect(isValidPostalCode('10150')).toBe(true);
+    expect(isValidPostalCode('20000')).toBe(true);
+    expect(isValidPostalCode('99999')).toBe(false);
+    expect(isValidPostalCode('invalid')).toBe(false);
   });
 
   it('should get cities by district', () => {
@@ -142,7 +155,18 @@ describe('Cities & Postal Codes', () => {
     expect(gampahaCities.every((c) => c.district === 'Gampaha')).toBe(true);
   });
 
-  it('should perform fast search matching English, Sinhala, and Tamil', () => {
+  it('should perform relevance-ranked search matching English, Sinhala, and Tamil', () => {
+    // Exact/prefix match must rank ahead of district matches
+    const colomboResults = search('colombo');
+    expect(colomboResults.length).toBeGreaterThan(0);
+    // The top results should be Colombo itself, NOT Akarawita or Batawala!
+    expect(colomboResults[0].name_en).toMatch(/^Colombo/i);
+
+    // Exact city match "Nawala" must rank before "Danawala Thiniyawala"
+    const nawalaResults = search('nawala');
+    expect(nawalaResults.length).toBeGreaterThan(0);
+    expect(nawalaResults[0].name_en).toBe('Nawala');
+
     const searchEng = search('kaduwela');
     expect(searchEng.length).toBeGreaterThan(0);
     expect(searchEng.some((c) => c.name_en.toLowerCase().includes('kaduwela'))).toBe(true);

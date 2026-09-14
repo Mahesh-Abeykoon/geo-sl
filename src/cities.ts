@@ -21,7 +21,7 @@ export const CITIES: readonly City[] = Object.freeze(
   )
 );
 
-// High-performance O(1) indexed maps
+// Internal index maps
 const POSTAL_CODE_MAP = new Map<string, City>();
 const POSTAL_CODE_ALL_MAP = new Map<string, City[]>();
 const CITY_NAME_MAP = new Map<string, City>();
@@ -39,12 +39,15 @@ for (const c of CITIES) {
   }
   POSTAL_CODE_ALL_MAP.get(pCode)!.push(c);
 
-  // Normalize name key
   const normName = c.name_en.toLowerCase().replace(/[^a-z0-9]/g, '');
   if (!CITY_NAME_MAP.has(normName)) {
     CITY_NAME_MAP.set(normName, c);
   }
-  // Also index Sinhala and Tamil names
+  const strippedZeros = normName.replace(/^([a-z]+)0+(\d+)$/, '$1$2');
+  if (!CITY_NAME_MAP.has(strippedZeros)) {
+    CITY_NAME_MAP.set(strippedZeros, c);
+  }
+
   if (!CITY_NAME_MAP.has(c.name_si.trim())) {
     CITY_NAME_MAP.set(c.name_si.trim(), c);
   }
@@ -52,7 +55,6 @@ for (const c of CITIES) {
     CITY_NAME_MAP.set(c.name_ta.trim(), c);
   }
 
-  // Index by district code and name
   const dAbbr = c.district_abbr.toUpperCase();
   const dName = c.district.toLowerCase();
   const dCode = c.district_code;
@@ -62,7 +64,6 @@ for (const c of CITIES) {
     DISTRICT_CITIES_MAP.get(key)!.push(c);
   }
 
-  // Index by province
   const provCode = c.province_code.toUpperCase();
   const provName = c.province.toLowerCase();
 
@@ -72,7 +73,6 @@ for (const c of CITIES) {
   }
 }
 
-// Freeze indexed arrays
 for (const [k, arr] of DISTRICT_CITIES_MAP.entries()) {
   DISTRICT_CITIES_MAP.set(k, Object.freeze(arr) as any);
 }
@@ -80,8 +80,18 @@ for (const [k, arr] of PROVINCE_CITIES_MAP.entries()) {
   PROVINCE_CITIES_MAP.set(k, Object.freeze(arr) as any);
 }
 
+// Canonical default for Colombo (GPO)
+if (!CITY_NAME_MAP.has('colombo')) {
+  const colombo1 = POSTAL_CODE_MAP.get('00100');
+  if (colombo1) CITY_NAME_MAP.set('colombo', colombo1);
+}
+
 /**
- * Direct O(1) lookup of a City by 5-digit postal code.
+ * Finds a city or post office by its 5-digit postal code.
+ *
+ * @param postalCode - 5-digit postal code (e.g. '00100' or 100).
+ * @param lang - Target language ('en' | 'si' | 'ta'). Default is 'en'.
+ * @returns Matching City object, or undefined if not found.
  *
  * @example
  * getCityByPostalCode('00100') // => Colombo 1
@@ -101,14 +111,19 @@ export function getCityByPostalCode(postalCode: string | number, lang?: Language
 }
 
 /**
- * Backward-compatible alias for getCityByPostalCode()
+ * Alias for getCityByPostalCode.
+ *
+ * @see getCityByPostalCode
  */
 export function lookupPostalCode(postalCode: string | number, options?: QueryOptions): City | undefined {
   return getCityByPostalCode(postalCode, options?.lang);
 }
 
 /**
- * Returns all postal stations / sub-offices sharing a postal code.
+ * Returns all postal stations or sub-offices that share the specified postal code.
+ *
+ * @param postalCode - 5-digit postal code.
+ * @param options - Query options including language selection.
  */
 export function lookupAllByPostalCode(postalCode: string | number, options?: QueryOptions): readonly City[] {
   if (postalCode === undefined || postalCode === null) return [];
@@ -124,10 +139,14 @@ export function lookupAllByPostalCode(postalCode: string | number, options?: Que
 }
 
 /**
- * Direct O(1) lookup of a 5-digit postal code by city name (English, Sinhala, or Tamil).
+ * Resolves the 5-digit postal code for a given city name (English, Sinhala, or Tamil).
+ *
+ * @param cityName - Name of the city or town.
+ * @returns 5-digit postal code string, or undefined if not found.
  *
  * @example
  * getPostalCode('Athurugiriya') // => "10150"
+ * getPostalCode('Colombo 1')    // => "00100"
  * getPostalCode('මහනුවර')      // => "20000"
  */
 export function getPostalCode(cityName: string): string | undefined {
@@ -136,16 +155,38 @@ export function getPostalCode(cityName: string): string | undefined {
   const directMatch = CITY_NAME_MAP.get(raw);
   if (directMatch) return directMatch.postal_code;
 
-  const norm = raw.toLowerCase().replace(/[^a-z0-9]/g, '');
+  let norm = raw.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const match = CITY_NAME_MAP.get(norm);
+  if (match) return match.postal_code;
+
+  norm = norm.replace(/^([a-z]+)0+(\d+)$/, '$1$2');
   return CITY_NAME_MAP.get(norm)?.postal_code;
 }
 
 /**
- * Get all cities for a district in O(1) constant time.
+ * Checks whether a given postal code exists in the official Sri Lanka Post dataset.
+ *
+ * @param postalCode - 5-digit postal code.
  *
  * @example
- * getCitiesByDistrict('CO')       // => All Colombo cities (189)
- * getCitiesByDistrict('Gampaha')  // => All Gampaha cities
+ * isValidPostalCode('00100') // => true
+ * isValidPostalCode('99999') // => false
+ */
+export function isValidPostalCode(postalCode: string | number): boolean {
+  if (postalCode === undefined || postalCode === null) return false;
+  const codeStr = String(postalCode).trim().padStart(5, '0');
+  return POSTAL_CODE_MAP.has(codeStr);
+}
+
+/**
+ * Returns all cities and post offices within a district.
+ *
+ * @param district - District code (e.g. 'CO') or district name.
+ * @param options - Query options including language selection.
+ *
+ * @example
+ * getCitiesByDistrict('CO')       // => Colombo cities
+ * getCitiesByDistrict('Gampaha')  // => Gampaha cities
  */
 export function getCitiesByDistrict(district: DistrictCode | string, options?: QueryOptions): readonly City[] {
   if (!district || typeof district !== 'string') return [];
@@ -162,7 +203,10 @@ export function getCitiesByDistrict(district: DistrictCode | string, options?: Q
 }
 
 /**
- * Get all cities for a province in O(1) constant time.
+ * Returns all cities and post offices within a province.
+ *
+ * @param province - Province code (e.g. 'WP') or province name.
+ * @param options - Query options including language selection.
  */
 export function getCitiesByProvince(province: ProvinceCode | string, options?: QueryOptions): readonly City[] {
   if (!province || typeof province !== 'string') return [];
@@ -179,7 +223,10 @@ export function getCitiesByProvince(province: ProvinceCode | string, options?: Q
 }
 
 /**
- * Returns all cities. Zero allocations when called without arguments.
+ * Returns cities and post offices, optionally filtered by district.
+ *
+ * @param districtOrOptions - District code/name or query options.
+ * @param options - Query options if district was specified as first argument.
  */
 export function getCities(
   districtOrOptions?: string | QueryOptions,
@@ -211,15 +258,25 @@ export function getCities(
 }
 
 /**
- * Fast search across English, Sinhala, Tamil town names, district names, and 5-digit postal codes.
+ * Searches cities, towns, and postal stations across English, Sinhala, and Tamil.
+ * Uses relevance scoring to prioritize exact and prefix matches over district matches.
+ *
+ * @param query - Search term (town name, postal code, or district).
+ * @param options - Search options including limit, language, and district/province filters.
+ *
+ * @example
+ * search('colombo') // => ['Colombo 1', 'Colombo 2', ...]
+ * search('nawala')  // => ['Nawala', 'Nawala-Koswatte', ...]
  */
 export function search(query: string, options?: SearchOptions): City[] {
   if (!query || !query.trim()) return [];
-  const q = query.trim().toLowerCase();
+  const rawQuery = query.trim();
+  const q = rawQuery.toLowerCase();
   const limit = options?.limit ?? 15;
   const lang = options?.lang || 'en';
 
-  const results: City[] = [];
+  const scored: Array<{ city: City; score: number }> = [];
+
   for (const c of CITIES) {
     if (options?.district) {
       const dNorm = options.district.trim().toLowerCase();
@@ -239,24 +296,55 @@ export function search(query: string, options?: SearchOptions): City[] {
       }
     }
 
-    const matches =
-      c.name_en.toLowerCase().includes(q) ||
-      c.postal_code.includes(q) ||
-      c.name_si.includes(query) ||
-      c.name_ta.includes(query) ||
-      c.district.toLowerCase().includes(q);
+    const nameEn = c.name_en.toLowerCase();
+    let score = 0;
 
-    if (matches) {
-      results.push(
-        lang === 'en'
-          ? c
-          : {
-              ...c,
-              name: lang === 'si' ? c.name_si : c.name_ta
-            }
-      );
-      if (results.length >= limit) break;
+    if (nameEn === q || c.name_si === rawQuery || c.name_ta === rawQuery) {
+      score = 100;
+    } else if (c.postal_code === q) {
+      score = 95;
+    } else if (nameEn.startsWith(q)) {
+      score = 80;
+    } else if (c.postal_code.startsWith(q)) {
+      score = 70;
+    } else if (c.name_si.startsWith(rawQuery) || c.name_ta.startsWith(rawQuery)) {
+      score = 65;
+    } else if (nameEn.includes(q)) {
+      score = 50;
+    } else if (c.name_si.includes(rawQuery) || c.name_ta.includes(rawQuery)) {
+      score = 45;
+    } else if (c.district.toLowerCase() === q || c.district_abbr.toLowerCase() === q) {
+      score = 25;
+    } else if (c.district.toLowerCase().includes(q)) {
+      score = 15;
     }
+
+    if (score > 0) {
+      scored.push({ city: c, score });
+    }
+  }
+
+  // Sort by score descending; tie-break by shorter name length, then alphabetical
+  scored.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    if (a.city.name_en.length !== b.city.name_en.length) {
+      return a.city.name_en.length - b.city.name_en.length;
+    }
+    return a.city.name_en.localeCompare(b.city.name_en);
+  });
+
+  const results: City[] = [];
+  const max = Math.min(scored.length, limit);
+  for (let i = 0; i < max; i++) {
+    const c = scored[i].city;
+    results.push(
+      lang === 'en'
+        ? c
+        : {
+            ...c,
+            name: lang === 'si' ? c.name_si : c.name_ta
+          }
+    );
   }
 
   return results;
