@@ -1,7 +1,7 @@
 {
   "name": "sl-geo",
   "version": "1.0.0",
-  "description": "The definitive, zero-dependency, trilingual (English, සිංහල, தமிழ்) Sri Lanka geographic, postal code, and administrative dataset for TypeScript and JavaScript.",
+  "description": "Trilingual (English, සිංහල, தமிழ்) Sri Lanka geographic, postal code, and administrative dataset for TypeScript and JavaScript.",
   "author": "Mahesh Abeykoon",
   "license": "MIT",
   "homepage": "https://github.com/mahesh-abeykoon/sl-geo#readme",
