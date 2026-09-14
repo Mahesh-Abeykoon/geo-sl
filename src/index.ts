@@ -3,11 +3,7 @@ export * from './provinces';
 export * from './districts';
 export * from './cities';
 export * from './divisions';
-export * from './banks';
 export * from './validators';
-
-// NOTE: Grama Niladhari (GN) data is ~3MB and is NOT included in the main bundle.
-// Import it directly via the subpath: import { getGNDivisions } from 'sl-geo/gn';
 
 import { PROVINCES } from './provinces';
 import { getDistrictsByProvince } from './districts';
@@ -17,9 +13,9 @@ import type { CascadingProvince, Language, QueryOptions } from './types';
 const CASCADING_CACHE = new Map<Language, CascadingProvince[]>();
 
 /**
- * Returns a nested hierarchy (Province -> District -> Cities)
- * designed specifically for cascading dropdowns in frontend checkout and registration forms.
- * Pre-computed and cached per language for ultra-fast rendering.
+ * Generates a nested hierarchy (Province -> District -> Cities) for multi-level select forms.
+ *
+ * @param options - Query options including language selection ('en' | 'si' | 'ta').
  */
 export function getCascadingData(options?: QueryOptions): CascadingProvince[] {
   const lang: Language = options?.lang || 'en';
