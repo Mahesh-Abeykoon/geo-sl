@@ -3,6 +3,7 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
+    types: 'src/types.ts',
     provinces: 'src/provinces.ts',
     districts: 'src/districts.ts',
     cities: 'src/cities.ts',

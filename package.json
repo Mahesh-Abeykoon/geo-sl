@@ -100,6 +100,16 @@
         "types": "./dist/gn.d.cts",
         "default": "./dist/gn.cjs"
       }
+    },
+    "./types": {
+      "import": {
+        "types": "./dist/types.d.ts",
+        "default": "./dist/types.js"
+      },
+      "require": {
+        "types": "./dist/types.d.cts",
+        "default": "./dist/types.cjs"
+      }
     }
   },
   "files": [
