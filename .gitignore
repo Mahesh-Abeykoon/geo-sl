@@ -35,11 +35,15 @@ desktop.ini
 *.swo
 *~
 
-# ── Hide raw data & extraction pipeline ───────────────────────────────────────
+# ── Hide raw data, processed datasets & extraction pipeline ───────────────────
 data/
+src/data/
 scripts/
 
 # ── Misc scratch files ────────────────────────────────────────────────────────
 demo.ts
 demo.mjs
+*.audit.md
+PRE_PUBLISH_AUDIT.md
+
 
