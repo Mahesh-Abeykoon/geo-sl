@@ -15,8 +15,8 @@
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
     "paths": {
-      "sl-geo": ["./dist/index.js"],
-      "sl-geo/*": ["./dist/*.js"]
+      "geo-sl": ["./dist/index.js"],
+      "geo-sl/*": ["./dist/*.js"]
     }
   },
   "include": [

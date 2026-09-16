@@ -1,16 +1,19 @@
 {
-  "name": "sl-geo",
-  "version": "1.0.0",
+  "name": "geo-sl",
+  "version": "1.0.1",
   "description": "Trilingual (English, සිංහල, தமிழ்) Sri Lanka geographic, postal code, and administrative dataset for TypeScript and JavaScript.",
   "author": "Mahesh Abeykoon",
   "license": "MIT",
-  "homepage": "https://github.com/mahesh-abeykoon/sl-geo#readme",
+  "homepage": "https://github.com/mahesh-abeykoon/geo-sl#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mahesh-abeykoon/sl-geo.git"
+    "url": "git+https://github.com/mahesh-abeykoon/geo-sl.git"
   },
   "bugs": {
-    "url": "https://github.com/mahesh-abeykoon/sl-geo/issues"
+    "url": "https://github.com/mahesh-abeykoon/geo-sl/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "sideEffects": false,
   "engines": {
@@ -116,21 +119,15 @@
     "dist"
   ],
   "keywords": [
-    "sri lanka",
-    "postal code",
-    "postcode",
+    "sri-lanka",
+    "geo",
+    "postal-codes",
     "cities",
     "districts",
     "provinces",
-    "divisional secretariat",
-    "grama niladhari",
-    "colombo",
-    "sinhala",
-    "tamil",
-    "lankapay",
-    "banks",
-    "address autocomplete",
-    "checkout"
+    "administrative-divisions",
+    "grama-niladhari",
+    "bank-codes"
   ],
   "scripts": {
     "build:data": "node scripts/build-datasets.mjs",

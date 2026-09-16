@@ -1,8 +1,8 @@
-# 🇱🇰 sl-geo
+# 🇱🇰 geo-sl
 
 > Trilingual (**English**, **සිංහල**, **தமிழ்**) Sri Lanka geographic, postal code, and administrative dataset for TypeScript & JavaScript with zero runtime dependencies.
 
-[![npm version](https://img.shields.io/npm/v/sl-geo.svg)](https://www.npmjs.com/package/sl-geo)
+[![npm version](https://img.shields.io/npm/v/geo-sl.svg)](https://www.npmjs.com/package/geo-sl)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue)]()
@@ -10,37 +10,41 @@
 
 ---
 
-## Features
+## 🗺️ 100% Comprehensive Island-wide Coverage
 
-- **Zero Runtime Dependencies** – Pure TypeScript with pre-indexed datasets and type definitions.
-- **Complete Administrative & Postal Coverage**:
-  - **2,500+ Post Offices & 5-digit Postal Codes** from the Department of Posts (`slpost.gov.lk`).
-  - **9 Provinces, 25 Districts, 340 Divisional Secretariats (DSD)** from the Ministry of Home Affairs (`moha.gov.lk`).
-  - **14,000+ Grama Niladhari (GN) divisions** available via dedicated subpath export (`sl-geo/gn`).
-  - **Official Bank Codes & Branch Codes** from the Central Bank of Sri Lanka (`cbsl.gov.lk`) / LankaPay via (`sl-geo/banks`).
-  - **GPS Latitude & Longitude** centroids for 2,100+ cities and towns.
-- **Trilingual Support** – Complete coverage across **English**, **Sinhala (සිංහල)**, and **Tamil (தமிழ்)**.
-- **Modular Subpath Exports** – Optimized for tree-shaking:
-  - `sl-geo/provinces`
-  - `sl-geo/districts`
-  - `sl-geo/cities`
-  - `sl-geo/divisions`
-  - `sl-geo/banks`
-  - `sl-geo/gn`
-  - `sl-geo/validators`
-- **Cascading Hierarchy Helper** – Built-in utility for multi-level Province ➔ District ➔ City form selectors.
-- **Relevance-Ranked Search** – Multi-lingual search matching by English name, Sinhala, Tamil, and 5-digit postal code with exact/prefix prioritization.
+`geo-sl` is not limited to major metropolitan areas. It provides complete, authoritative, and verified geographic coverage across the entire territory of Sri Lanka—from provincial capitals down to individual rural villages:
+
+| Administrative / Geographic Level | Total Count | Scope & Details | Supported Languages |
+|---|---|---|---|
+| **Provinces** | **9** | All 9 provinces (WP, CP, SP, NP, EP, NW, NC, UV, SG) | English, සිංහල, தமிழ் |
+| **Districts** | **25** | All 25 administrative districts across the island | English, සිංහල, தமிழ் |
+| **Divisional Secretariats (DSD)** | **340** | 100% of Divisional Secretariat Divisions (MOHA) | English, සිංහල, தமிழ் |
+| **Grama Niladhari (GN) Divisions** | **14,020** | Every single village, ward, and local community | English, සිංහල, தமிழ் |
+| **Cities, Towns & Post Offices** | **2,598** | Main post offices, towns, and sub-post offices | English, සිංහල, தமிழ் |
+| **GPS Centroids** | **2,100+** | Accurate Latitude & Longitude coordinates | WGS84 coordinates |
+| **Licensed Banks & Branches** | **45 Banks / 582+ Branches** | Complete CBSL & LankaPay routing codes | Official routing codes |
+
+---
+
+## ⚡ Key Highlights
+
+- **Zero Runtime Dependencies** – Pure TypeScript with pre-indexed lookup maps. Ultra-fast, deterministic performance.
+- **Trilingual First-Class Support** – Seamless lookups in **English**, **Sinhala (සිංහල)**, and **Tamil (தமிழ்)** with native scripts.
+- **Optimized Subpath Tree-Shaking** – Import only what you need. Lightweight modules like validators are only **~2.3 KB**.
+- **Cascading Form Helper** – Out-of-the-box hierarchy builder (`Province ➔ District ➔ City`) for checkout address selectors.
+- **Intelligent Relevance Search** – Multi-lingual search prioritizing exact matches, prefixes, and postal codes over broad substring matches.
+- **Built-in Validators & Parsers** – National Identity Card (Old 9-digit + New 12-digit NIC), Sri Lankan mobile & landline phone numbers, and postal codes.
 
 ---
 
 ## Installation
 
 ```bash
-npm install sl-geo
+npm install geo-sl
 # or
-pnpm add sl-geo
+pnpm add geo-sl
 # or
-yarn add sl-geo
+yarn add geo-sl
 ```
 
 ---
@@ -58,7 +62,7 @@ import {
   PROVINCE_MAP,
   DISTRICT_MAP,
   search
-} from 'sl-geo';
+} from 'geo-sl';
 
 // 1. Province Lookup
 const wp = getProvince('WP');
@@ -99,25 +103,25 @@ To keep client bundles minimal, import only the modules your application needs:
 
 ```typescript
 // Provinces only (~2 KB)
-import { PROVINCES, getProvinces, getProvince } from 'sl-geo/provinces';
+import { PROVINCES, getProvinces, getProvince } from 'geo-sl/provinces';
 
 // Districts only (~7 KB)
-import { DISTRICTS, getDistricts, getDistrictsByProvince } from 'sl-geo/districts';
+import { DISTRICTS, getDistricts, getDistrictsByProvince } from 'geo-sl/districts';
 
 // Cities & Postal Codes (~900 KB)
-import { CITIES, getCityByPostalCode, getPostalCode, search } from 'sl-geo/cities';
+import { CITIES, getCityByPostalCode, getPostalCode, search } from 'geo-sl/cities';
 
 // Divisional Secretariats (~68 KB)
-import { DIVISIONS, getDivisions, getDivisionsByDistrict } from 'sl-geo/divisions';
+import { DIVISIONS, getDivisions, getDivisionsByDistrict } from 'geo-sl/divisions';
 
 // CBSL Bank & Branch Codes (~140 KB)
-import { BANKS, getBanks, getBankByCode, getBranches } from 'sl-geo/banks';
+import { BANKS, getBanks, getBankByCode, getBranches } from 'geo-sl/banks';
 
 // Grama Niladhari Divisions (14,000+ entries, ~3 MB)
-import { GN_DIVISIONS, getGNDivisions, searchGN } from 'sl-geo/gn';
+import { GN_DIVISIONS, getGNDivisions, searchGN } from 'geo-sl/gn';
 
 // Validators & Parsers (~2.3 KB)
-import { validateNIC, parseNIC, validatePhone, parsePhone, validatePostalCode } from 'sl-geo/validators';
+import { validateNIC, parseNIC, validatePhone, parsePhone, validatePostalCode } from 'geo-sl/validators';
 ```
 
 ---
@@ -128,7 +132,7 @@ The easiest way to build a Sri Lankan checkout address form:
 
 ```tsx
 import React, { useState } from 'react';
-import { getCascadingData } from 'sl-geo';
+import { getCascadingData } from 'geo-sl';
 
 const addressData = getCascadingData({ lang: 'en' });
 
@@ -193,12 +197,12 @@ export function SriLankaAddressForm() {
 
 ---
 
-## 🏦 CBSL Bank & Branch Codes (`sl-geo/banks`)
+## 🏦 CBSL Bank & Branch Codes (`geo-sl/banks`)
 
 Essential for fintech, payment gateway integrations, and bank transfer checkouts:
 
 ```typescript
-import { getBanks, getBankByCode, getBranches } from 'sl-geo/banks';
+import { getBanks, getBankByCode, getBranches } from 'geo-sl/banks';
 
 // List all licensed banks
 const allBanks = getBanks();
@@ -250,14 +254,14 @@ const branches = getBranches('7010');
 * `getBranchByCode(bankCode: string | number, branchCode: string | number): Branch | undefined`
 * `searchBranches(bankCode: string | number, query: string): Branch[]`
 
-### Grama Niladhari (GN) Divisions (`sl-geo/gn`)
+### Grama Niladhari (GN) Divisions (`geo-sl/gn`)
 * `getGNDivisions(options?: { lang?: 'en' | 'si' | 'ta' }): GNDivision[]`
 * `getGNDivisionsByDSD(divisionName: string, options?: { lang?: 'en' | 'si' | 'ta' }): GNDivision[]`
 * `getGNDivisionsByDistrict(districtName: string, options?: { lang?: 'en' | 'si' | 'ta' }): GNDivision[]`
 * `findGNByCode(code: string, options?: { lang?: 'en' | 'si' | 'ta' }): GNDivision | undefined`
 * `searchGN(query: string, options?: { limit?: number; lang?: 'en' | 'si' | 'ta'; district?: string; division?: string }): GNDivision[]`
 
-### Sri Lanka Validators & Parsers (`sl-geo/validators`)
+### Sri Lanka Validators & Parsers (`geo-sl/validators`)
 * `validateNIC(nic: string): boolean`
 * `parseNIC(nic: string): ParsedNIC | null` – parses birthdate, gender, age, voter eligibility from Old (9+V/X) and New (12 digits) NICs.
 * `convertOldNICToNew(oldNic: string): string | null` – converts 9-digit old NIC to 12-digit format.
@@ -286,16 +290,8 @@ import type {
   DistrictCode,
   QueryOptions,
   SearchOptions
-} from 'sl-geo';
+} from 'geo-sl';
 ```
-
----
-
-## 🏛️ Data Sources & Attribution
-
-- **Postal Data**: [Department of Posts, Sri Lanka](https://slpost.gov.lk)
-- **Administrative Hierarchy**: [Ministry of Public Administration & Home Affairs](http://moha.gov.lk) & [Department of Census and Statistics](http://www.statistics.gov.lk)
-- **Bank & Branch Codes**: [Central Bank of Sri Lanka](https://www.cbsl.gov.lk) & [LankaPay](https://www.lankapay.net)
 
 ---
 
