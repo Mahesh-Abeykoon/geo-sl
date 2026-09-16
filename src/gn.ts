@@ -126,7 +126,7 @@ export function searchGN(query: string, options?: GNSearchOptions): GNDivision[]
   if (!query || query.trim() === '') return [];
 
   const cleanQuery = query.trim().toLowerCase();
-  const limit = options?.limit || 20;
+  const limit = options?.limit ?? 20;
   const lang = options?.lang || 'en';
 
   const results: GNDivision[] = [];

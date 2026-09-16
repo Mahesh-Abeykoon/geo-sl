@@ -12,11 +12,11 @@
 
 ## 🗺️ 100% Comprehensive Island-wide Coverage
 
-`geo-sl` is not limited to major metropolitan areas. It provides complete, authoritative, and verified geographic coverage across the entire territory of Sri Lanka—from provincial capitals down to individual rural villages:
+`geo-sl` covers the entire territory of Sri Lanka — not just major cities and urban centers. It provides complete, authoritative, and verified geographic data from provincial capitals all the way down to individual rural villages and remote Grama Niladhari divisions:
 
 | Administrative / Geographic Level | Total Count | Scope & Details | Supported Languages |
 |---|---|---|---|
-| **Provinces** | **9** | All 9 provinces (WP, CP, SP, NP, EP, NW, NC, UV, SG) | English, සිංහල, தமிழ் |
+| **Provinces** | **9** | All 9 provinces (WP, CP, SP, NP, EP, NWP, NCP, UP, SGP) | English, සිංහල, தமிழ் |
 | **Districts** | **25** | All 25 administrative districts across the island | English, සිංහල, தமிழ் |
 | **Divisional Secretariats (DSD)** | **340** | 100% of Divisional Secretariat Divisions (MOHA) | English, සිංහල, தமிழ் |
 | **Grama Niladhari (GN) Divisions** | **14,020** | Every single village, ward, and local community | English, සිංහල, தமிழ் |
@@ -92,7 +92,7 @@ getPostalCode('මහනුවර');       // => "20000"
 // 5. Search with Relevance Ranking
 search('colombo'); // => [ { name_en: 'Colombo 1', ... }, { name_en: 'Colombo 2', ... } ]
 search('nawala');  // => [ { name_en: 'Nawala', ... }, ... ]
-search('කොළඹ');    // Sinhala search
+search('කොළඹ');    // => [ { name_en: 'Colombo 1', ... }, ... ]  (Sinhala search)
 ```
 
 ---
@@ -121,7 +121,7 @@ import { BANKS, getBanks, getBankByCode, getBranches } from 'geo-sl/banks';
 import { GN_DIVISIONS, getGNDivisions, searchGN } from 'geo-sl/gn';
 
 // Validators & Parsers (~2.3 KB)
-import { validateNIC, parseNIC, validatePhone, parsePhone, validatePostalCode } from 'geo-sl/validators';
+import { validateNIC, parseNIC, convertOldNICToNew, validatePhone, parsePhone, formatPhone, validatePostalCode } from 'geo-sl/validators';
 ```
 
 ---
@@ -209,7 +209,7 @@ const allBanks = getBanks();
 
 // Find Bank of Ceylon
 const boc = getBankByCode('7010');
-console.log(boc.name); // "Bank of Ceylon"
+console.log(boc?.name); // "Bank of Ceylon"
 
 // Get all branches for a bank
 const branches = getBranches('7010');
@@ -222,12 +222,16 @@ const branches = getBranches('7010');
 
 ### Provinces
 * `getProvinces(options?: { lang?: 'en' | 'si' | 'ta' }): Province[]`
-* `getProvinceByCode(code: string, options?: { lang?: 'en' | 'si' | 'ta' }): Province | undefined`
+* `getProvince(codeOrId: string): Province | undefined` – primary lookup by code (e.g. `'WP'`), ID, or English name.
+* `getProvinceName(codeOrId: string, lang?: Language): string | undefined`
+* `getProvinceByCode(code: string, options?: { lang?: 'en' | 'si' | 'ta' }): Province | undefined` – alias for `getProvince`
 
 ### Districts
 * `getDistricts(province?: string, options?: { lang?: 'en' | 'si' | 'ta' }): District[]`
-* `getDistrictByCode(code: string, options?: { lang?: 'en' | 'si' | 'ta' }): District | undefined`
+* `getDistrict(codeOrId: string): District | undefined` – primary lookup by abbreviation (e.g. `'CO'`), ID, or English name.
+* `getDistrictName(codeOrId: string, lang?: Language): string | undefined`
 * `getDistrictsByProvince(province: string, options?: { lang?: 'en' | 'si' | 'ta' }): District[]`
+* `getDistrictByCode(code: string, options?: { lang?: 'en' | 'si' | 'ta' }): District | undefined` – alias for `getDistrict`
 
 ### Cities & Postal Codes
 * `getCities(district?: string, options?: { lang?: 'en' | 'si' | 'ta' }): City[]`
@@ -235,9 +239,9 @@ const branches = getBranches('7010');
 * `getCitiesByProvince(province: string, options?: { lang?: 'en' | 'si' | 'ta' }): City[]`
 * `getPostalCode(cityName: string): string | undefined`
 * `getCityByPostalCode(postalCode: string | number, lang?: 'en' | 'si' | 'ta'): City | undefined`
-* `isValidPostalCode(postalCode: string | number): boolean`
-* `lookupPostalCode(code: string | number, options?: { lang?: 'en' | 'si' | 'ta' }): City | undefined`
-* `lookupAllByPostalCode(code: string | number, options?: { lang?: 'en' | 'si' | 'ta' }): City[]`
+* `isValidPostalCode(postalCode: string | number): boolean` – checks existence against the Sri Lanka Post database.
+* `lookupPostalCode(code: string | number, options?: { lang?: 'en' | 'si' | 'ta' }): City | undefined` – alias for `getCityByPostalCode`
+* `lookupAllByPostalCode(code: string | number, options?: { lang?: 'en' | 'si' | 'ta' }): City[]` – returns all offices sharing a postal code.
 * `search(query: string, options?: { limit?: number; lang?: 'en' | 'si' | 'ta'; district?: string; province?: string }): City[]`
 
 ### Cascading Hierarchy
@@ -246,11 +250,13 @@ const branches = getBranches('7010');
 ### Administrative Divisions (MOHA)
 * `getDivisions(district?: string, options?: { lang?: 'en' | 'si' | 'ta' }): Division[]`
 * `getDivisionsByDistrict(district: string, options?: { lang?: 'en' | 'si' | 'ta' }): Division[]`
+* `getDivisionsByProvince(province: string, options?: { lang?: 'en' | 'si' | 'ta' }): Division[]`
 
 ### Financial Institutions (CBSL / LankaPay)
-* `getBanks(): Bank[]`
-* `getBankByCode(code: string | number): Bank | undefined`
-* `getBranches(bankCode: string | number): Branch[]`
+* `getBanks(): readonly Bank[]`
+* `getBank(codeOrId: string | number): Bank | undefined` – primary lookup by 4-digit CBSL code, ID, or bank name.
+* `getBankByCode(codeOrId: string | number): Bank | undefined` – alias for `getBank`
+* `getBranches(bankCode: string | number): readonly Branch[]`
 * `getBranchByCode(bankCode: string | number, branchCode: string | number): Branch | undefined`
 * `searchBranches(bankCode: string | number, query: string): Branch[]`
 
@@ -264,7 +270,7 @@ const branches = getBranches('7010');
 ### Sri Lanka Validators & Parsers (`geo-sl/validators`)
 * `validateNIC(nic: string): boolean`
 * `parseNIC(nic: string): ParsedNIC | null` – parses birthdate, gender, age, voter eligibility from Old (9+V/X) and New (12 digits) NICs.
-* `convertOldNICToNew(oldNic: string): string | null` – converts 9-digit old NIC to 12-digit format.
+* `convertOldNICToNew(oldNic: string): string | null` – converts 10-character old NIC (9 digits + V/X) to 12-digit new format.
 * `validatePhone(phone: string): boolean`
 * `parsePhone(phone: string): ParsedPhone | null` – parses operator (Dialog, Mobitel, Hutch, Airtel), type (mobile/fixed), and formats.
 * `formatPhone(phone: string, style?: 'international' | 'local' | 'e164'): string | null`

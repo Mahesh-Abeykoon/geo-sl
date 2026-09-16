@@ -21,6 +21,7 @@ import {
   getCascadingData,
   getDivisions,
   getDivisionsByDistrict,
+  getDivisionsByProvince,
   getName,
   isValidPostalCode
 } from '../src/index';
@@ -198,6 +199,17 @@ describe('Divisional Secretariats (DSD)', () => {
     expect(colomboDivisions.length).toBeGreaterThan(10);
     const names = colomboDivisions.map((d) => d.name_en.toLowerCase());
     expect(names.some((n) => n.includes('kaduwela') || n.includes('colombo'))).toBe(true);
+  });
+
+  it('should filter divisions by province', () => {
+    const westernDivisions = getDivisionsByProvince('Western');
+    expect(westernDivisions.length).toBeGreaterThan(20);
+    // All returned divisions must belong to Western province districts
+    const colomboDivs = getDivisionsByDistrict('Colombo');
+    const gampahaDiv = getDivisionsByDistrict('Gampaha');
+    const kalutaraDiv = getDivisionsByDistrict('Kalutara');
+    const expectedTotal = colomboDivs.length + gampahaDiv.length + kalutaraDiv.length;
+    expect(westernDivisions).toHaveLength(expectedTotal);
   });
 });
 
