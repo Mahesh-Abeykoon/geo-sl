@@ -19,6 +19,8 @@ import {
   lookupAllByPostalCode,
   search,
   getCascadingData,
+  getAdministrativeCascadingData,
+  toSelectOptions,
   getDivisions,
   getDivisionsByDistrict,
   getDivisionsByProvince,
@@ -243,4 +245,46 @@ describe('Cascading Form Data', () => {
     expect(colombo).toBeDefined();
     expect(colombo?.cities.length).toBeGreaterThan(20);
   });
+
+  it('should build an administrative hierarchy (Province -> District -> DS Divisions)', () => {
+    const adminTree = getAdministrativeCascadingData({ lang: 'en' });
+    expect(adminTree).toHaveLength(9);
+
+    const western = adminTree.find((p) => p.code === 'WP');
+    expect(western).toBeDefined();
+    expect(western?.districts).toHaveLength(3);
+
+    const colombo = western?.districts.find((d) => d.code === 'CO');
+    expect(colombo).toBeDefined();
+    expect(colombo?.divisions.length).toBeGreaterThan(10);
+    expect(colombo?.divisions.some((div) => div.name_en === 'Colombo')).toBe(true);
+
+    // Sinhala localization
+    const adminSi = getAdministrativeCascadingData({ lang: 'si' });
+    const colomboSi = adminSi.find((p) => p.code === 'WP')?.districts.find((d) => d.code === 'CO');
+    expect(colomboSi?.name).toBe('කොළඹ');
+  });
 });
+
+describe('toSelectOptions Helper', () => {
+  it('should format array items using string keys', () => {
+    const provinces = getProvinces();
+    const options = toSelectOptions(provinces, 'name', 'code');
+    expect(options).toHaveLength(9);
+    expect(options[0]).toHaveProperty('label');
+    expect(options[0]).toHaveProperty('value');
+    expect(options.some((o) => o.label === 'Western' && o.value === 'WP')).toBe(true);
+  });
+
+  it('should format array items using mapper functions', () => {
+    const cities = getCitiesByDistrict('CO');
+    const options = toSelectOptions(
+      cities,
+      (c) => `${c.name} (${c.postal_code})`,
+      (c) => c.postal_code
+    );
+    expect(options.length).toBeGreaterThan(20);
+    expect(options.some((o) => o.label.includes('00100') && o.value === '00100')).toBe(true);
+  });
+});
+
