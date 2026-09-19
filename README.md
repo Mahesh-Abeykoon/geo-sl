@@ -321,7 +321,7 @@ const branches = getBranches('7010');
 
 ## 🎓 Universities (`geo-sl/universities`)
 
-Government (UGC state universities) and private degree-awarding institutions with their addresses:
+Government (UGC state universities) and private degree-awarding institutions with trilingual names (English, සිංහල, தமிழ்) and addresses:
 
 ```typescript
 import { getUniversities, getUniversity, getUniversitiesByDistrict, searchUniversities } from 'geo-sl/universities';
@@ -380,7 +380,7 @@ searchUniversities('malabe', { type: 'private' });
 
 ### Universities (`geo-sl/universities`)
 * `getUniversities(type?: 'government' | 'private'): readonly University[]`
-* `getUniversity(idOrName: string): University | undefined` – by id, full name, or short name.
+* `getUniversity(idOrName: string): University | undefined` – by id, full name (English, Sinhala or Tamil), or short name.
 * `getUniversitiesByDistrict(district: string): University[]` – district name or abbreviation.
 * `getUniversitiesByProvince(province: string): University[]` – province name or code.
 * `searchUniversities(query: string, options?: { type?, district?, province?, limit? }): University[]`

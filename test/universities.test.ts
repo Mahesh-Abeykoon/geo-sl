@@ -13,6 +13,8 @@ describe('Universities', () => {
     expect(new Set(UNIVERSITIES.map((u) => u.id)).size).toBe(UNIVERSITIES.length);
     for (const u of UNIVERSITIES) {
       expect(u.address).toBeTruthy();
+      expect(u.name_si).toBeTruthy();
+      expect(u.name_ta).toBeTruthy();
       expect(u.postal_code).toMatch(/^\d{5}$/);
       expect(u.province).toBeTruthy();
     }
@@ -28,6 +30,11 @@ describe('Universities', () => {
     expect(getUniversity('UoC')?.name).toBe('University of Colombo');
     expect(getUniversity('university of peradeniya')?.city).toBe('Peradeniya');
     expect(getUniversity('nope')).toBeUndefined();
+  });
+
+  it('supports Sinhala and Tamil names', () => {
+    expect(getUniversity('කොළඹ විශ්වවිද්‍යාලය')?.short_name).toBe('UoC');
+    expect(searchUniversities('யாழ்ப்பாண')[0].short_name).toBe('UoJ');
   });
 
   it('filters by district and province', () => {

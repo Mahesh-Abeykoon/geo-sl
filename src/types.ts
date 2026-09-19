@@ -122,6 +122,9 @@ export type UniversityType = 'government' | 'private';
 export interface University {
   id: string;
   name: string;
+  name_en: string;
+  name_si: string;
+  name_ta: string;
   short_name: string;
   type: UniversityType;
   address: string;
