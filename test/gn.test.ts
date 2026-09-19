@@ -57,4 +57,45 @@ describe('Grama Niladhari (GN) Divisions', () => {
     expect(matchTa?.name).toBe(matchTa?.name_ta);
     expect(matchTa?.name_en).toBe('Sammanthranapura');
   });
+
+  describe('Village Aliases', () => {
+    it('should export VILLAGES matching GN_DIVISIONS', async () => {
+      const { VILLAGES, GN_DIVISIONS } = await import('../src/gn');
+      expect(VILLAGES).toBe(GN_DIVISIONS);
+    });
+
+    it('should provide getVillages alias', async () => {
+      const { getVillages } = await import('../src/gn');
+      const list = getVillages();
+      expect(list.length).toBeGreaterThan(14000);
+    });
+
+    it('should provide getVillagesByDivision alias', async () => {
+      const { getVillagesByDivision } = await import('../src/gn');
+      const colomboVillages = getVillagesByDivision('Colombo');
+      expect(colomboVillages.length).toBeGreaterThan(20);
+      expect(colomboVillages.every((v) => v.division === 'Colombo')).toBe(true);
+    });
+
+    it('should provide getVillagesByDistrict alias', async () => {
+      const { getVillagesByDistrict } = await import('../src/gn');
+      const kandyVillages = getVillagesByDistrict('Kandy');
+      expect(kandyVillages.length).toBeGreaterThan(500);
+    });
+
+    it('should provide findVillageByCode alias', async () => {
+      const { findVillageByCode } = await import('../src/gn');
+      const village = findVillageByCode('005');
+      expect(village).toBeDefined();
+      expect(village?.name_en).toBe('Sammanthranapura');
+    });
+
+    it('should provide searchVillages alias', async () => {
+      const { searchVillages } = await import('../src/gn');
+      const results = searchVillages('Mattakkuliya');
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].name_en).toBe('Mattakkuliya');
+    });
+  });
 });
+
