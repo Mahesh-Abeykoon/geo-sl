@@ -126,13 +126,17 @@ import { validateNIC, parseNIC, convertOldNICToNew, validatePhone, parsePhone, f
 
 ---
 
-## 🎨 Interactive React / Next.js Cascading Form Example
+## 🎨 Interactive React / Next.js Cascading Form Examples
 
-The easiest way to build a Sri Lankan checkout address form:
+`geo-sl` makes building multi-level dependent dropdowns straightforward for both e-commerce checkouts and official KYC/government forms.
+
+### 1. Delivery & Checkout Address Form (`Province ➔ District ➔ City / Postal Code`)
+
+For shipping and delivery addresses, use `getCascadingData()` or `toSelectOptions()`:
 
 ```tsx
 import React, { useState } from 'react';
-import { getCascadingData } from 'geo-sl';
+import { getCascadingData, toSelectOptions } from 'geo-sl';
 
 const addressData = getCascadingData({ lang: 'en' });
 
@@ -144,22 +148,32 @@ export function SriLankaAddressForm() {
   const currentProvince = addressData.find((p) => p.code === selectedProvince);
   const currentDistrict = currentProvince?.districts.find((d) => d.code === selectedDistrict);
 
+  // Convert to standard { label, value } options for React-Select / Shadcn / HTML select
+  const provinceOptions = toSelectOptions(addressData, 'name', 'code');
+  const districtOptions = toSelectOptions(currentProvince?.districts || [], 'name', 'code');
+  const cityOptions = toSelectOptions(
+    currentDistrict?.cities || [],
+    (c) => `${c.name} (${c.postal_code})`,
+    'name'
+  );
+
   return (
     <div className="space-y-4">
       {/* Province */}
       <select
         value={selectedProvince}
         onChange={(e) => {
-          setSelectedProvince(e.target.value as any);
-          const prov = addressData.find((p) => p.code === e.target.value);
+          const code = e.target.value;
+          setSelectedProvince(code as any);
+          const prov = addressData.find((p) => p.code === code);
           if (prov && prov.districts[0]) {
             setSelectedDistrict(prov.districts[0].code);
             setSelectedCity(prov.districts[0].cities[0]?.name || '');
           }
         }}
       >
-        {addressData.map((p) => (
-          <option key={p.code} value={p.code}>{p.name}</option>
+        {provinceOptions.map((opt) => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
         ))}
       </select>
 
@@ -167,15 +181,16 @@ export function SriLankaAddressForm() {
       <select
         value={selectedDistrict}
         onChange={(e) => {
-          setSelectedDistrict(e.target.value as any);
-          const dist = currentProvince?.districts.find((d) => d.code === e.target.value);
+          const code = e.target.value;
+          setSelectedDistrict(code as any);
+          const dist = currentProvince?.districts.find((d) => d.code === code);
           if (dist && dist.cities[0]) {
             setSelectedCity(dist.cities[0].name);
           }
         }}
       >
-        {currentProvince?.districts.map((d) => (
-          <option key={d.code} value={d.code}>{d.name}</option>
+        {districtOptions.map((opt) => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
         ))}
       </select>
 
@@ -184,16 +199,102 @@ export function SriLankaAddressForm() {
         value={selectedCity}
         onChange={(e) => setSelectedCity(e.target.value)}
       >
-        {currentDistrict?.cities.map((c) => (
-          <option key={c.name} value={c.name}>
-            {c.name} ({c.postal_code})
-          </option>
+        {cityOptions.map((opt) => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
         ))}
       </select>
     </div>
   );
 }
 ```
+
+---
+
+### 2. Administrative & Village Form (`Province ➔ District ➔ DS Division ➔ Village / GN`)
+
+For banking KYC, voter registration, legal documentation, or government administrative forms, query on-demand down to the **14,020 official villages (Grama Niladhari divisions)**:
+
+```tsx
+import React, { useState, useEffect } from 'react';
+import { getProvinces, getDistrictsByProvince, getDivisionsByDistrict, toSelectOptions } from 'geo-sl';
+import { getVillagesByDivision, searchVillages, type Village } from 'geo-sl/gn';
+
+export function SriLankaAdministrativeForm() {
+  const [provinceCode, setProvinceCode] = useState('WP');
+  const [district, setDistrict] = useState('Colombo');
+  const [division, setDivision] = useState('Colombo');
+  const [villages, setVillages] = useState<readonly Village[]>([]);
+  const [selectedVillage, setSelectedVillage] = useState('');
+
+  // Load villages dynamically whenever the DS division changes
+  useEffect(() => {
+    const list = getVillagesByDivision(division);
+    setVillages(list);
+    if (list.length > 0) setSelectedVillage(list[0].code);
+  }, [division]);
+
+  const provinces = toSelectOptions(getProvinces(), 'name', 'code');
+  const districts = toSelectOptions(getDistrictsByProvince(provinceCode), 'name', 'name_en');
+  const divisions = toSelectOptions(getDivisionsByDistrict(district), 'name', 'name_en');
+  const villageOptions = toSelectOptions(
+    villages,
+    (v) => `${v.name} (${v.code})`,
+    'code'
+  );
+
+  return (
+    <form className="space-y-4">
+      {/* 1. Province */}
+      <select
+        value={provinceCode}
+        onChange={(e) => {
+          setProvinceCode(e.target.value);
+          const firstDist = getDistrictsByProvince(e.target.value)[0];
+          if (firstDist) {
+            setDistrict(firstDist.name_en);
+            const firstDiv = getDivisionsByDistrict(firstDist.name_en)[0];
+            if (firstDiv) setDivision(firstDiv.name_en);
+          }
+        }}
+      >
+        {provinces.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+      </select>
+
+      {/* 2. District */}
+      <select
+        value={district}
+        onChange={(e) => {
+          setDistrict(e.target.value);
+          const firstDiv = getDivisionsByDistrict(e.target.value)[0];
+          if (firstDiv) setDivision(firstDiv.name_en);
+        }}
+      >
+        {districts.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+      </select>
+
+      {/* 3. DS Division */}
+      <select
+        value={division}
+        onChange={(e) => setDivision(e.target.value)}
+      >
+        {divisions.map((div) => <option key={div.value} value={div.value}>{div.label}</option>)}
+      </select>
+
+      {/* 4. Village (Grama Niladhari Division) */}
+      <select
+        value={selectedVillage}
+        onChange={(e) => setSelectedVillage(e.target.value)}
+      >
+        {villageOptions.map((v) => <option key={v.value} value={v.value}>{v.label}</option>)}
+      </select>
+    </form>
+  );
+}
+```
+
+> [!TIP]
+> **Autocomplete for Villages:** With 14,000+ villages, you can also use `searchVillages('Mattakkuliya', { district: 'Colombo', limit: 10 })` to power modern searchable comboboxes (Shadcn, Headless UI, Radix) across English, Sinhala (`මට්ටක්කුලිය`), and Tamil (`மட்டக்குளி`).
+
 
 ---
 
@@ -244,8 +345,10 @@ const branches = getBranches('7010');
 * `lookupAllByPostalCode(code: string | number, options?: { lang?: 'en' | 'si' | 'ta' }): City[]` – returns all offices sharing a postal code.
 * `search(query: string, options?: { limit?: number; lang?: 'en' | 'si' | 'ta'; district?: string; province?: string }): City[]`
 
-### Cascading Hierarchy
-* `getCascadingData(options?: { lang?: 'en' | 'si' | 'ta' }): CascadingProvince[]`
+### Cascading Hierarchy & Form Helpers
+* `getCascadingData(options?: { lang?: 'en' | 'si' | 'ta' }): CascadingProvince[]` – pre-nested tree (Province ➔ District ➔ Cities).
+* `getAdministrativeCascadingData(options?: { lang?: 'en' | 'si' | 'ta' }): CascadingAdministrativeProvince[]` – pre-nested tree (Province ➔ District ➔ DS Divisions).
+* `toSelectOptions<T>(items, labelKey, valueKey): SelectOption[]` – universal formatter converting data objects into `{ label, value }` pairs for UI dropdowns.
 
 ### Administrative Divisions (MOHA)
 * `getDivisions(district?: string, options?: { lang?: 'en' | 'si' | 'ta' }): Division[]`
@@ -260,12 +363,19 @@ const branches = getBranches('7010');
 * `getBranchByCode(bankCode: string | number, branchCode: string | number): Branch | undefined`
 * `searchBranches(bankCode: string | number, query: string): Branch[]`
 
-### Grama Niladhari (GN) Divisions (`geo-sl/gn`)
+### Grama Niladhari (GN) & Village Divisions (`geo-sl/gn`)
 * `getGNDivisions(options?: { lang?: 'en' | 'si' | 'ta' }): GNDivision[]`
 * `getGNDivisionsByDSD(divisionName: string, options?: { lang?: 'en' | 'si' | 'ta' }): GNDivision[]`
 * `getGNDivisionsByDistrict(districtName: string, options?: { lang?: 'en' | 'si' | 'ta' }): GNDivision[]`
 * `findGNByCode(code: string, options?: { lang?: 'en' | 'si' | 'ta' }): GNDivision | undefined`
 * `searchGN(query: string, options?: { limit?: number; lang?: 'en' | 'si' | 'ta'; district?: string; division?: string }): GNDivision[]`
+* **Village Aliases:**
+  * `getVillages(options?)` – alias for `getGNDivisions`
+  * `getVillagesByDivision(divisionName, options?)` – alias for `getGNDivisionsByDSD`
+  * `getVillagesByDistrict(districtName, options?)` – alias for `getGNDivisionsByDistrict`
+  * `findVillageByCode(code, options?)` – alias for `findGNByCode`
+  * `searchVillages(query, options?)` – alias for `searchGN`
+  * `VILLAGES` – alias for `GN_DIVISIONS`
 
 ### Sri Lanka Validators & Parsers (`geo-sl/validators`)
 * `validateNIC(nic: string): boolean`
@@ -287,15 +397,21 @@ import type {
   Bank,
   Branch,
   GNDivision,
+  Village,
+  SelectOption,
   CascadingProvince,
   CascadingDistrict,
+  CascadingAdministrativeProvince,
+  CascadingAdministrativeDistrict,
+  CascadingAdministrativeDivision,
   ParsedNIC,
   ParsedPhone,
   Language,
   ProvinceCode,
   DistrictCode,
   QueryOptions,
-  SearchOptions
+  SearchOptions,
+  VillageSearchOptions
 } from 'geo-sl';
 ```
 

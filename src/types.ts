@@ -127,6 +127,14 @@ export interface SearchOptions extends QueryOptions {
   province?: string;
 }
 
+export type Village = GNDivision;
+export type VillageSearchOptions = GNSearchOptions;
+
+export interface SelectOption {
+  label: string;
+  value: string;
+}
+
 export interface CascadingDistrict {
   id: string;
   code: DistrictAbbreviation;
@@ -144,3 +152,25 @@ export interface CascadingProvince {
   name: string;
   districts: CascadingDistrict[];
 }
+
+export interface CascadingAdministrativeDivision {
+  name: string;
+  name_en: string;
+  name_si: string;
+  name_ta: string;
+}
+
+export interface CascadingAdministrativeDistrict {
+  id: string;
+  code: DistrictAbbreviation;
+  name: string;
+  divisions: CascadingAdministrativeDivision[];
+}
+
+export interface CascadingAdministrativeProvince {
+  id: string;
+  code: ProvinceCode;
+  name: string;
+  districts: CascadingAdministrativeDistrict[];
+}
+

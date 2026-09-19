@@ -1,5 +1,5 @@
 import gnData from './data/gn.json';
-import type { GNDivision, GNSearchOptions, Language, QueryOptions } from './types';
+import type { GNDivision, GNSearchOptions, Language, QueryOptions, Village, VillageSearchOptions } from './types';
 
 export const GN_DIVISIONS: readonly GNDivision[] = Object.freeze(
   (gnData as any[]).map((g) =>
@@ -160,4 +160,42 @@ export function searchGN(query: string, options?: GNSearchOptions): GNDivision[]
 
   return results;
 }
+
+export type { Village, VillageSearchOptions } from './types';
+
+/**
+ * Alias for GN_DIVISIONS.
+ * Represents all 14,000+ official villages and wards (Grama Niladhari divisions) in Sri Lanka.
+ */
+export const VILLAGES: readonly GNDivision[] = GN_DIVISIONS;
+
+/**
+ * Alias for getGNDivisions.
+ * Returns all villages (Grama Niladhari divisions) in Sri Lanka.
+ */
+export const getVillages = getGNDivisions;
+
+/**
+ * Alias for getGNDivisionsByDSD.
+ * Returns all villages within a Divisional Secretariat (DS) division.
+ */
+export const getVillagesByDivision = getGNDivisionsByDSD;
+
+/**
+ * Alias for getGNDivisionsByDistrict.
+ * Returns all villages within a district.
+ */
+export const getVillagesByDistrict = getGNDivisionsByDistrict;
+
+/**
+ * Alias for findGNByCode.
+ * Finds a village by its official GN code.
+ */
+export const findVillageByCode = findGNByCode;
+
+/**
+ * Alias for searchGN.
+ * Searches villages across English, Sinhala, Tamil, or GN code.
+ */
+export const searchVillages = searchGN;
 
