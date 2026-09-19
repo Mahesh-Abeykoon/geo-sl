@@ -104,6 +104,16 @@
         "default": "./dist/gn.cjs"
       }
     },
+    "./universities": {
+      "import": {
+        "types": "./dist/universities.d.ts",
+        "default": "./dist/universities.js"
+      },
+      "require": {
+        "types": "./dist/universities.d.cts",
+        "default": "./dist/universities.cjs"
+      }
+    },
     "./types": {
       "import": {
         "types": "./dist/types.d.ts",
@@ -127,7 +137,8 @@
     "provinces",
     "administrative-divisions",
     "grama-niladhari",
-    "bank-codes"
+    "bank-codes",
+    "universities"
   ],
   "scripts": {
     "build:data": "node scripts/build-datasets.mjs",

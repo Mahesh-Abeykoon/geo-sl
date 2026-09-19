@@ -319,6 +319,21 @@ const branches = getBranches('7010');
 
 ---
 
+## 🎓 Universities (`geo-sl/universities`)
+
+Government (UGC state universities) and private degree-awarding institutions with their addresses:
+
+```typescript
+import { getUniversities, getUniversity, getUniversitiesByDistrict, searchUniversities } from 'geo-sl/universities';
+
+getUniversities('government'); // state universities
+getUniversity('UoC');          // => { name: 'University of Colombo', address: 'No. 94, Cumaratunga Munidasa Mawatha', city: 'Colombo 03', postal_code: '00300', ... }
+getUniversitiesByDistrict('Kandy');
+searchUniversities('malabe', { type: 'private' });
+```
+
+---
+
 ## 📚 API Reference
 
 ### Provinces
@@ -363,6 +378,13 @@ const branches = getBranches('7010');
 * `getBranchByCode(bankCode: string | number, branchCode: string | number): Branch | undefined`
 * `searchBranches(bankCode: string | number, query: string): Branch[]`
 
+### Universities (`geo-sl/universities`)
+* `getUniversities(type?: 'government' | 'private'): readonly University[]`
+* `getUniversity(idOrName: string): University | undefined` – by id, full name, or short name.
+* `getUniversitiesByDistrict(district: string): University[]` – district name or abbreviation.
+* `getUniversitiesByProvince(province: string): University[]` – province name or code.
+* `searchUniversities(query: string, options?: { type?, district?, province?, limit? }): University[]`
+
 ### Grama Niladhari (GN) & Village Divisions (`geo-sl/gn`)
 * `getGNDivisions(options?: { lang?: 'en' | 'si' | 'ta' }): GNDivision[]`
 * `getGNDivisionsByDSD(divisionName: string, options?: { lang?: 'en' | 'si' | 'ta' }): GNDivision[]`
@@ -396,6 +418,7 @@ import type {
   Division,
   Bank,
   Branch,
+  University,
   GNDivision,
   Village,
   SelectOption,

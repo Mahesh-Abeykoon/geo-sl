@@ -10,7 +10,8 @@ export default defineConfig({
     divisions: 'src/divisions.ts',
     banks: 'src/banks.ts',
     validators: 'src/validators.ts',
-    gn: 'src/gn.ts'
+    gn: 'src/gn.ts',
+    universities: 'src/universities.ts'
   },
   format: ['esm', 'cjs'],
   dts: true,
