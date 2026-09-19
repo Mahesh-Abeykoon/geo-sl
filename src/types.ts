@@ -117,6 +117,32 @@ export interface Bank {
   branches: Branch[];
 }
 
+export type UniversityType = 'government' | 'private';
+
+export interface University {
+  id: string;
+  name: string;
+  name_en: string;
+  name_si: string;
+  name_ta: string;
+  short_name: string;
+  type: UniversityType;
+  address: string;
+  city: string;
+  postal_code: string;
+  district: string;
+  district_code: DistrictAbbreviation;
+  province: string;
+  province_code: ProvinceCode;
+}
+
+export interface UniversitySearchOptions {
+  limit?: number;
+  type?: UniversityType;
+  district?: string;
+  province?: string;
+}
+
 export interface QueryOptions {
   lang?: Language;
 }

@@ -4,6 +4,7 @@ export * from './districts';
 export * from './cities';
 export * from './divisions';
 export * from './validators';
+export * from './universities';
 
 import { PROVINCES } from './provinces';
 import { getDistrictsByProvince } from './districts';
