@@ -19,7 +19,7 @@ describe('Universities', () => {
   });
 
   it('splits government and private', () => {
-    expect(getUniversities('government').length).toBeGreaterThanOrEqual(17);
+    expect(getUniversities('government').length).toBeGreaterThanOrEqual(20);
     expect(getUniversities('private').length).toBeGreaterThan(0);
     expect(getUniversities()).toHaveLength(UNIVERSITIES.length);
   });

@@ -24,6 +24,7 @@ const PROVINCE_OF: Record<string, [string, string, ProvinceCode]> = {
   KG: ['Kurunegala', 'North Western', 'NWP'],
   BD: ['Badulla', 'Uva', 'UP'],
   VA: ['Vavuniya', 'Northern', 'NP'],
+  KE: ['Kegalle', 'Sabaragamuwa', 'SGP'],
   HB: ['Hambantota', 'Southern', 'SP'],
 };
 
@@ -51,8 +52,29 @@ const ROWS: Row[] = [
   ['sliit', 'SLIIT', 'Sri Lanka Institute of Information Technology', 'private', 'New Kandy Road', 'Malabe', '10115', 'CO'],
   ['nsbm-green-university', 'NSBM', 'NSBM Green University', 'private', 'Mahenwatta, Pitipana', 'Homagama', '10200', 'CO'],
   ['cinec-campus', 'CINEC', 'CINEC Campus', 'private', 'Millennium Drive, IT Park', 'Malabe', '10115', 'CO'],
-  ['horizon-campus', 'HORIZON', 'Horizon Campus', 'private', 'Malabe-Kaduwela Road', 'Malabe', '10115', 'CO'],
+  ['horizon-campus', 'HORIZON', 'Horizon College of Business & Technology', 'private', 'Malabe-Kaduwela Road', 'Malabe', '10115', 'CO'],
   ['sltc-research-university', 'SLTC', 'SLTC Research University', 'private', 'Meepe', 'Padukka', '10500', 'CO'],
+  ['buddhasravaka-bhiksu-university', 'BUSL', 'Buddhasravaka Bhiksu University', 'government', 'New Elkatuwa Road', 'Anuradhapura', '50000', 'AD'],
+  ['university-of-vocational-technology', 'UNIVOTEC', 'University of Vocational Technology', 'government', 'Ratmalana', 'Ratmalana', '10390', 'CO'],
+  ['institute-of-surveying-and-mapping', 'ISM', 'Institute of Surveying and Mapping', 'government', 'Diyatalawa', 'Diyatalawa', '90350', 'BD'],
+  ['sri-lanka-institute-of-development-administration', 'SLIDA', 'Sri Lanka Institute of Development Administration', 'government', 'No. 28/10, Malalasekera Mawatha', 'Colombo 07', '00700', 'CO'],
+  ['national-institute-of-social-development', 'NISD', 'National Institute of Social Development', 'government', 'Liyanagemulla', 'Seeduwa', '11410', 'GQ'],
+  ['sri-lanka-institute-of-tourism-and-hotel-management', 'SLITHM', 'Sri Lanka Institute of Tourism and Hotel Management', 'government', 'No. 78, Galle Road', 'Colombo 03', '00300', 'CO'],
+  ['sri-lanka-institute-of-textile-and-apparel', 'SLITA', 'Sri Lanka Institute of Textile and Apparel', 'government', 'Kandawala Estate, No. 2, General Sir John Kotelawala Road', 'Ratmalana', '10390', 'CO'],
+  ['institute-of-chartered-accountants-of-sri-lanka', 'CA-SL', 'Institute of Chartered Accountants of Sri Lanka', 'private', 'No. 30A, Malalasekera Mawatha', 'Colombo 07', '00700', 'CO'],
+  ['south-asian-institute-of-technology-and-medicine', 'SAITM', 'South Asian Institute of Technology and Medicine', 'private', 'Millennium Drive, off Chandrika Kumaratunga Mawatha', 'Malabe', '10115', 'CO'],
+  ['sri-lanka-institute-of-nanotechnology', 'SLINTEC', 'Sri Lanka Institute of Nanotechnology', 'private', 'Nanotechnology & Science Park, Mahenwatta, Pitipana', 'Homagama', '10200', 'CO'],
+  ['aquinas-college-of-higher-studies', 'AQUINAS', 'Aquinas College of Higher Studies', 'private', 'No. 30, Gnanartha Pradeepa Mawatha', 'Colombo 08', '00800', 'CO'],
+  ['kiu', 'KIU', 'KAATSU International University', 'private', 'No. 249/1, Malabe Road, Thalangama North', 'Battaramulla', '10120', 'CO'],
+  ['esoft-uni', 'ESOFT', 'ESOFT Uni', 'private', 'No. 3, De Fonseka Place', 'Colombo 04', '00400', 'CO'],
+  ['sanasa-campus', 'SANASA', 'SANASA Campus', 'private', 'Paragammana, Hettimulla', 'Kegalle', '71210', 'KE'],
+  ['saegis-campus', 'SAEGIS', 'Saegis Campus', 'private', 'No. 135, S. De S. Jayasinghe Mawatha, Kohuwala', 'Nugegoda', '10250', 'CO'],
+  ['gateway-college', 'GATEWAY', 'Gateway College', 'private', 'No. 185, Koswatta Road, off Royal Gardens', 'Rajagiriya', '10100', 'CO'],
+  ['british-school-of-commerce', 'BSC', 'British School of Commerce', 'private', 'No. 19, Mcleod Road', 'Colombo 04', '00400', 'CO'],
+  ['informatics-institute-of-technology', 'IIT', 'Informatics Institute of Technology', 'private', 'No. 57, Ramakrishna Road', 'Colombo 06', '00600', 'CO'],
+  ['apiit-lanka', 'APIIT', 'Asia Pacific Institute of Information Technology', 'private', 'No. 388, Union Place', 'Colombo 02', '00200', 'CO'],
+  ['nagananda-international-institute-for-buddhist-studies', 'NIIBS', 'Nagananda International Institute for Buddhist Studies', 'private', 'Manelwatta, Bollegala', 'Kelaniya', '11600', 'GQ'],
+  ['sri-lanka-international-buddhist-academy', 'SIBA', 'Sri Lanka International Buddhist Academy', 'private', 'Pallekele, Kundasale', 'Kundasale', '20168', 'KY'],
 ];
 
 export const UNIVERSITIES: readonly University[] = Object.freeze(
