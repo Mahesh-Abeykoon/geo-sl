@@ -1,5 +1,5 @@
 import gnData from './data/gn.json';
-import type { GNDivision, GNSearchOptions, Language, QueryOptions, Village, VillageSearchOptions } from './types';
+import type { GNDivision, GNSearchOptions, Language, QueryOptions } from './types';
 
 export const GN_DIVISIONS: readonly GNDivision[] = Object.freeze(
   (gnData as any[]).map((g) =>

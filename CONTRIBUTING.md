@@ -62,7 +62,13 @@ npm test
 npm run test:watch
 ```
 
-### 4. Build Bundles
+### 4. Lint & Unused Code Check
+We check for syntax validity, type correctness, and unused imports/variables:
+```bash
+npm run lint
+```
+
+### 5. Build Bundles
 We use [tsup](https://tsup.egoist.dev/) to produce ESM, CommonJS, and TypeScript declaration (`.d.ts` / `.d.cts`) files:
 ```bash
 npm run build

@@ -19,6 +19,7 @@ Before submitting, please ensure your contribution adheres to the **`geo-sl`** d
   > *(Note: Points of interest, universities, schools, and hospitals belong in dedicated sister packages like [`edu-sl`](https://github.com/mahesh-abeykoon/edu-sl)).*
 - [ ] **Trilingual Parity**: Any new or updated geographical or administrative names include valid trilingual entries (`name_en`, `name_si`, `name_ta`).
 - [ ] **Zero Runtime Dependencies**: No runtime dependencies have been added to `package.json` (`dependencies` remains empty).
+- [ ] **Lint & Clean Code**: Zero unused variables, imports, or TypeScript errors (`npm run lint`).
 - [ ] **Testing**: Added or updated unit tests in `test/`, and all tests pass locally (`npm test`).
 - [ ] **Build**: Production build completes cleanly without errors (`npm run build`).
 - [ ] **Target Branch**: This PR targets the `development` branch (not directly `master`).
