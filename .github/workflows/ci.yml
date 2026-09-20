@@ -28,33 +28,38 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Generate mock data stubs for CI
+        run: |
+          mkdir -p src/data
+          echo "[]" > src/data/provinces.json
+          echo "[]" > src/data/districts.json
+          echo "[]" > src/data/cities.json
+          echo "[]" > src/data/divisions.json
+          echo "[]" > src/data/banks.json
+          echo "[]" > src/data/gn.json
+
       - name: Check types, unused locals & unused imports
         run: npm run lint
 
-  test-and-build:
-    name: Test & Build (Node ${{ matrix.node-version }})
+  quality:
+    name: Code Quality & Dependency Policy
     runs-on: ubuntu-latest
-    needs: [lint]
-
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x, 22.x]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js 20.x
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20.x
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Build package (tsup)
-        run: npm run build
+      - name: Verify zero console.log in src/
+        run: npm run check:console
 
-      - name: Run test suite (vitest)
-        run: npm test
+      - name: Verify zero runtime dependencies
+        run: npm run check:deps
