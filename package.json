@@ -132,9 +132,14 @@
   "scripts": {
     "build:data": "node scripts/build-datasets.mjs",
     "build": "tsup",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "check:console": "node -e \"const fs = require('fs'), path = require('path'); function walk(d){ let res=[]; for(const f of fs.readdirSync(d)){ const p = path.join(d,f); if(fs.statSync(p).isDirectory()) res.push(...walk(p)); else if(/\\.(ts|js)$/.test(f)) res.push(p); } return res; } const files = walk('src'); let err=false; for(const f of files){ const c = fs.readFileSync(f, 'utf8'); if(/console\\.log/.test(c)){ console.error('Stray console.log found in', f); err=true; }} if(err) process.exit(1); console.log('✓ No stray console.log found.');\"",
+    "check:deps": "node -e \"const pkg = require('./package.json'); if (pkg.dependencies && Object.keys(pkg.dependencies).length > 0) { console.error('Dependencies must be empty! Found:', pkg.dependencies); process.exit(1); } console.log('✓ Zero runtime dependencies verified.');\"",
+    "check": "npm run lint && npm run check:console && npm run check:deps",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepublishOnly": "npm run build && npm test"
+    "prepublishOnly": "npm run check && npm run build && npm test"
   },
   "devDependencies": {
     "@types/node": "^20.11.24",

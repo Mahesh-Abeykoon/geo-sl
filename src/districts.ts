@@ -2,7 +2,7 @@ import districtsData from './data/districts.json';
 import type { District, DistrictAbbreviation, DistrictCode, Language, ProvinceCode, QueryOptions } from './types';
 
 export const DISTRICTS: readonly District[] = Object.freeze(
-  districtsData.map((d) =>
+  (districtsData as any[]).map((d) =>
     Object.freeze({
       id: d.id,
       code: d.code as DistrictAbbreviation,
