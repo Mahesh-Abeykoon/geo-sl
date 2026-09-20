@@ -3,6 +3,7 @@
 > Trilingual (**English**, **සිංහල**, **தமிழ்**) Sri Lanka geographic, postal code, and administrative dataset for TypeScript & JavaScript with zero runtime dependencies.
 
 [![npm version](https://img.shields.io/npm/v/geo-sl.svg)](https://www.npmjs.com/package/geo-sl)
+[![CI](https://github.com/mahesh-abeykoon/geo-sl/actions/workflows/ci.yml/badge.svg)](https://github.com/mahesh-abeykoon/geo-sl/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue)]()
@@ -34,6 +35,51 @@
 - **Cascading Form Helper** – Out-of-the-box hierarchy builder (`Province ➔ District ➔ City`) for checkout address selectors.
 - **Intelligent Relevance Search** – Multi-lingual search prioritizing exact matches, prefixes, and postal codes over broad substring matches.
 - **Built-in Validators & Parsers** – National Identity Card (Old 9-digit + New 12-digit NIC), Sri Lankan mobile & landline phone numbers, and postal codes.
+
+---
+
+## 🎯 Scope, Real-World Use Cases & Ecosystem
+
+`geo-sl` is specifically engineered as the **authoritative data foundation** for digital applications operating in Sri Lanka. It solves the fragmentation of postal, geographic, and identity data across public and private sectors.
+
+### 🌟 What `geo-sl` is Built For:
+
+1. **E-Commerce & Checkout Delivery Flow**
+   - Instant cascading dropdowns: `Province ➔ District ➔ City / DSD` with zero network latency.
+   - Trilingual rendering (`English`, `සිංහල`, `தமிழ்`) tailored to user locale.
+   - Clean `{ label, value }` data transformation via `toSelectOptions()`.
+
+2. **Logistics, Delivery & Courier Dispatch**
+   - 2,598 official postal codes with localized names and district mappings.
+   - Over 2,100 verified GPS centroids (WGS84) for map visualization and delivery zoning.
+   - Comprehensive Grama Niladhari division codes (14,020 entries) for precise village-level delivery dispatch.
+
+3. **Fintech, Banking & CEFT / SLIPS Payment Routing**
+   - 45 CBSL licensed commercial and specialized banks.
+   - 582+ branch routing codes for electronic funds transfer, payout disbursement, and direct debit integrations.
+
+4. **KYC & Customer Onboarding Verification**
+   - Offline verification and decoding of Sri Lankan National Identity Cards (both 9-digit old format with V/X and 12-digit new format).
+   - Extracts birthdate, gender, age, and voter eligibility without external API dependencies.
+   - Phone number format validation and telco operator identification (Dialog, Mobitel, Hutch, Airtel, SLT).
+
+---
+
+### 🛡️ What `geo-sl` is NOT (Scope Discipline)
+
+To keep `geo-sl` ultra-lightweight, blazing fast, and deterministic, we enforce strict scope boundaries:
+
+- ❌ **No Commercial POIs**: It does NOT include restaurants, hotels, tourist attractions, or shopping malls.
+- ❌ **No Higher Education or School Listings**: Educational institution directories are intentionally separated to avoid bloating web checkout bundles.
+
+### 🇱🇰 The Sri Lanka Open-Source Data Ecosystem
+
+For specialized datasets outside geographic and administrative infrastructure, use our dedicated sister packages:
+
+| Package | Purpose & Focus |
+|---|---|
+| 🗺️ **[`geo-sl`](https://github.com/mahesh-abeykoon/geo-sl)** *(This library)* | Authoritative Administrative (Provinces, Districts, DSD, GN), Postal Codes, GPS Centroids, CBSL Bank Codes, NIC/Phone Parsers. |
+| 🎓 **[`edu-sl`](https://github.com/mahesh-abeykoon/edu-sl)** | Sri Lanka State Universities (UGC-recognized), campuses, faculties, and accredited higher educational institutes. |
 
 ---
 
@@ -417,6 +463,18 @@ import type {
 
 ---
 
+## 🤝 Contributing & Automated Quality Checks
+
+We welcome contributions from the community! To ensure high quality:
+- Every Pull Request automatically runs our **GitHub Actions CI suite** across Node.js 18, 20, and 22.
+- All geographic entities must preserve 100% **trilingual parity** (`name_en`, `name_si`, `name_ta`).
+- The library strictly enforces a **Zero Runtime Dependencies** policy.
+
+Please check our [Contributing Guide](CONTRIBUTING.md) and [Pull Request Template](.github/PULL_REQUEST_TEMPLATE.md) before submitting code.
+
+---
+
 ## 📄 License
 
 MIT © [Mahesh Abeykoon](https://github.com/mahesh-abeykoon)
+
