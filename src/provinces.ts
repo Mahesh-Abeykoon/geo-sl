@@ -2,7 +2,7 @@ import provincesData from './data/provinces.json';
 import type { Language, Province, ProvinceCode, QueryOptions } from './types';
 
 export const PROVINCES: readonly Province[] = Object.freeze(
-  provincesData.map((p) =>
+  (provincesData as any[]).map((p) =>
     Object.freeze({
       id: p.id,
       code: p.code as ProvinceCode,
