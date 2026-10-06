@@ -130,6 +130,34 @@ export interface SearchOptions extends QueryOptions {
 export type Village = GNDivision;
 export type VillageSearchOptions = GNSearchOptions;
 
+export interface Coordinates {
+  latitude: number;
+  longitude: number;
+}
+
+export interface CityWithDistance extends City {
+  distanceKm: number;
+}
+
+export interface NearestCityOptions extends QueryOptions {
+  maxDistanceKm?: number;
+  district?: string;
+  province?: string;
+}
+
+export interface RadiusSearchOptions extends QueryOptions {
+  limit?: number;
+  district?: string;
+  province?: string;
+}
+
+export interface ParsedRoutingNumber {
+  isValid: boolean;
+  routingNumber: string;
+  bank?: Bank;
+  branch?: Branch;
+}
+
 export interface SelectOption {
   label: string;
   value: string;
@@ -139,8 +167,14 @@ export interface CascadingDistrict {
   id: string;
   code: DistrictAbbreviation;
   name: string;
+  name_en?: string;
+  name_si?: string;
+  name_ta?: string;
   cities: Array<{
     name: string;
+    name_en?: string;
+    name_si?: string;
+    name_ta?: string;
     postal_code: string;
     is_sub_post_office: boolean;
   }>;
@@ -150,6 +184,9 @@ export interface CascadingProvince {
   id: string;
   code: ProvinceCode;
   name: string;
+  name_en?: string;
+  name_si?: string;
+  name_ta?: string;
   districts: CascadingDistrict[];
 }
 
@@ -164,6 +201,9 @@ export interface CascadingAdministrativeDistrict {
   id: string;
   code: DistrictAbbreviation;
   name: string;
+  name_en?: string;
+  name_si?: string;
+  name_ta?: string;
   divisions: CascadingAdministrativeDivision[];
 }
 
@@ -171,6 +211,34 @@ export interface CascadingAdministrativeProvince {
   id: string;
   code: ProvinceCode;
   name: string;
+  name_en?: string;
+  name_si?: string;
+  name_ta?: string;
   districts: CascadingAdministrativeDistrict[];
 }
+
+/**
+ * Utility helper to convert any array of items into standard `{ label: string, value: string }`
+ * options formatted for `<select>`, React-Select, Shadcn Combobox, MUI Select, etc.
+ *
+ * @param items - Array of data objects (provinces, districts, cities, divisions, villages, etc.)
+ * @param labelKey - Property key or mapper function returning the display label.
+ * @param valueKey - Property key or mapper function returning the option value.
+ *
+ * @example
+ * toSelectOptions(getProvinces(), 'name', 'code')
+ * // => [{ label: 'Western', value: 'WP' }, ...]
+ */
+export function toSelectOptions<T>(
+  items: readonly T[] | T[],
+  labelKey: keyof T | ((item: T) => string),
+  valueKey: keyof T | ((item: T) => string)
+): SelectOption[] {
+  return items.map((item) => {
+    const label = typeof labelKey === 'function' ? labelKey(item) : String(item[labelKey] ?? '');
+    const value = typeof valueKey === 'function' ? valueKey(item) : String(item[valueKey] ?? '');
+    return { label, value };
+  });
+}
+
 

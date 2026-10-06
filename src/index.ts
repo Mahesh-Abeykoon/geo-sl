@@ -13,8 +13,7 @@ import type {
   CascadingProvince,
   CascadingAdministrativeProvince,
   Language,
-  QueryOptions,
-  SelectOption
+  QueryOptions
 } from './types';
 
 const CASCADING_CACHE = new Map<Language, CascadingProvince[]>();
@@ -40,6 +39,9 @@ export function getCascadingData(options?: QueryOptions): CascadingProvince[] {
       id: p.id,
       code: p.code,
       name: provName,
+      name_en: p.name_en,
+      name_si: p.name_si,
+      name_ta: p.name_ta,
       districts: pDistricts.map((d) => {
         const distName = lang === 'si' ? d.name_si : lang === 'ta' ? d.name_ta : d.name_en;
         const dCities = getCitiesByDistrict(d.code);
@@ -48,8 +50,14 @@ export function getCascadingData(options?: QueryOptions): CascadingProvince[] {
           id: d.id,
           code: d.code,
           name: distName,
+          name_en: d.name_en,
+          name_si: d.name_si,
+          name_ta: d.name_ta,
           cities: dCities.map((c) => ({
             name: lang === 'si' ? c.name_si : lang === 'ta' ? c.name_ta : c.name_en,
+            name_en: c.name_en,
+            name_si: c.name_si,
+            name_ta: c.name_ta,
             postal_code: c.postal_code,
             is_sub_post_office: c.is_sub_post_office
           }))
@@ -83,6 +91,9 @@ export function getAdministrativeCascadingData(options?: QueryOptions): Cascadin
       id: p.id,
       code: p.code,
       name: provName,
+      name_en: p.name_en,
+      name_si: p.name_si,
+      name_ta: p.name_ta,
       districts: pDistricts.map((d) => {
         const distName = lang === 'si' ? d.name_si : lang === 'ta' ? d.name_ta : d.name_en;
         const dDivisions = getDivisionsByDistrict(d.name_en);
@@ -91,6 +102,9 @@ export function getAdministrativeCascadingData(options?: QueryOptions): Cascadin
           id: d.id,
           code: d.code,
           name: distName,
+          name_en: d.name_en,
+          name_si: d.name_si,
+          name_ta: d.name_ta,
           divisions: dDivisions.map((div) => ({
             name: lang === 'si' ? div.name_si : lang === 'ta' ? div.name_ta : div.name_en,
             name_en: div.name_en,
@@ -106,30 +120,4 @@ export function getAdministrativeCascadingData(options?: QueryOptions): Cascadin
   return result;
 }
 
-/**
- * Utility helper to convert any array of items into standard `{ label: string, value: string }`
- * options formatted for `<select>`, React-Select, Shadcn Combobox, MUI Select, etc.
- *
- * @param items - Array of data objects (provinces, districts, cities, divisions, villages, etc.)
- * @param labelKey - Property key or mapper function returning the display label.
- * @param valueKey - Property key or mapper function returning the option value.
- *
- * @example
- * toSelectOptions(getProvinces(), 'name', 'code')
- * // => [{ label: 'Western', value: 'WP' }, ...]
- *
- * toSelectOptions(cities, (c) => `${c.name} (${c.postal_code})`, 'postal_code')
- * // => [{ label: 'Colombo 1 (00100)', value: '00100' }, ...]
- */
-export function toSelectOptions<T>(
-  items: readonly T[] | T[],
-  labelKey: keyof T | ((item: T) => string),
-  valueKey: keyof T | ((item: T) => string)
-): SelectOption[] {
-  return items.map((item) => {
-    const label = typeof labelKey === 'function' ? labelKey(item) : String(item[labelKey] ?? '');
-    const value = typeof valueKey === 'function' ? valueKey(item) : String(item[valueKey] ?? '');
-    return { label, value };
-  });
-}
 

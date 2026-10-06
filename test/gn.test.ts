@@ -3,6 +3,7 @@ import {
   getGNDivisions,
   getGNDivisionsByDSD,
   getGNDivisionsByDistrict,
+  getGNDivisionsByProvince,
   findGNByCode,
   searchGN
 } from '../src/gn';
@@ -27,16 +28,31 @@ describe('Grama Niladhari (GN) Divisions', () => {
     expect(kandyGNs.length).toBeGreaterThan(500);
   });
 
+  it('should filter GN divisions by Province', () => {
+    const westernGNs = getGNDivisionsByProvince('Western');
+    expect(westernGNs.length).toBeGreaterThan(1000);
+    expect(westernGNs.every((g) => ['colombo', 'gampaha', 'kalutara'].includes(g.district.toLowerCase()))).toBe(true);
+
+    const wpByCode = getGNDivisionsByProvince('WP');
+    expect(wpByCode).toHaveLength(westernGNs.length);
+  });
+
   it('should find GN division by code', () => {
     const gn = findGNByCode('005');
     expect(gn).toBeDefined();
     expect(gn?.name_en).toBe('Sammanthranapura');
   });
 
-  it('should search GN divisions across Sinhala, Tamil, and English', () => {
+  it('should search GN divisions across Sinhala, Tamil, and English with relevance ranking', () => {
     const enSearch = searchGN('Mattakkuliya');
     expect(enSearch.length).toBeGreaterThan(0);
     expect(enSearch[0].name_en).toBe('Mattakkuliya');
+
+    // Relevance ranking should place exact match "Modara" above partial matches like "Thummodara" or "Demodarawatta"
+    const modaraSearch = searchGN('Modara');
+    expect(modaraSearch.length).toBeGreaterThan(0);
+    expect(modaraSearch[0].name_en).toBe('Modara');
+    expect(modaraSearch[0].division).toBe('Colombo');
 
     const siSearch = searchGN('මට්ටක්කුලිය');
     expect(siSearch.length).toBeGreaterThan(0);
@@ -81,6 +97,12 @@ describe('Grama Niladhari (GN) Divisions', () => {
       const { getVillagesByDistrict } = await import('../src/gn');
       const kandyVillages = getVillagesByDistrict('Kandy');
       expect(kandyVillages.length).toBeGreaterThan(500);
+    });
+
+    it('should provide getVillagesByProvince alias', async () => {
+      const { getVillagesByProvince } = await import('../src/gn');
+      const westernVillages = getVillagesByProvince('Western');
+      expect(westernVillages.length).toBeGreaterThan(1000);
     });
 
     it('should provide findVillageByCode alias', async () => {

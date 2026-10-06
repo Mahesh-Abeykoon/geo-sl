@@ -1,5 +1,16 @@
 import citiesData from './data/cities.json';
-import type { City, DistrictAbbreviation, DistrictCode, Language, ProvinceCode, QueryOptions, SearchOptions } from './types';
+import type {
+  City,
+  CityWithDistance,
+  DistrictAbbreviation,
+  DistrictCode,
+  Language,
+  NearestCityOptions,
+  ProvinceCode,
+  QueryOptions,
+  RadiusSearchOptions,
+  SearchOptions
+} from './types';
 
 export const CITIES: readonly City[] = Object.freeze(
   (citiesData as any[]).map((c) =>
@@ -80,10 +91,12 @@ for (const [k, arr] of PROVINCE_CITIES_MAP.entries()) {
   PROVINCE_CITIES_MAP.set(k, Object.freeze(arr) as any);
 }
 
-// Canonical default for Colombo (GPO)
-if (!CITY_NAME_MAP.has('colombo')) {
-  const colombo1 = POSTAL_CODE_MAP.get('00100');
-  if (colombo1) CITY_NAME_MAP.set('colombo', colombo1);
+// Canonical default for Colombo (GPO) across English, Sinhala, and Tamil
+const colombo1 = POSTAL_CODE_MAP.get('00100');
+if (colombo1) {
+  if (!CITY_NAME_MAP.has('colombo')) CITY_NAME_MAP.set('colombo', colombo1);
+  if (!CITY_NAME_MAP.has('කොළඹ')) CITY_NAME_MAP.set('කොළඹ', colombo1);
+  if (!CITY_NAME_MAP.has('கொழும்பு')) CITY_NAME_MAP.set('கொழும்பு', colombo1);
 }
 
 /**
@@ -139,6 +152,59 @@ export function lookupAllByPostalCode(postalCode: string | number, options?: Que
 }
 
 /**
+ * Finds a city or post office by its name across English, Sinhala, or Tamil.
+ *
+ * @param cityName - Name of the city or town.
+ * @param options - Query options including language selection.
+ *
+ * @example
+ * getCityByName('Kandy') // => Kandy City object
+ * getCityByName('මහනුවර') // => Kandy City object
+ */
+export function getCityByName(cityName: string, options?: QueryOptions): City | undefined {
+  if (!cityName || typeof cityName !== 'string') return undefined;
+  const raw = cityName.trim();
+  let city = CITY_NAME_MAP.get(raw);
+
+  if (!city) {
+    const strippedNumber = raw.replace(/(\s+)0+(\d+)/, '$1$2');
+    city = CITY_NAME_MAP.get(strippedNumber);
+  }
+
+  if (!city) {
+    const norm = raw.toLowerCase().replace(/[^a-z0-9]/g, '');
+    city = CITY_NAME_MAP.get(norm) || CITY_NAME_MAP.get(norm.replace(/^([a-z]+)0+(\d+)$/, '$1$2'));
+  }
+
+  if (!city) return undefined;
+  const lang = options?.lang;
+  if (!lang || lang === 'en') return city;
+  return {
+    ...city,
+    name: lang === 'si' ? city.name_si : city.name_ta
+  };
+}
+
+/**
+ * Finds a city by postal code (e.g. '00100') or city name (English, Sinhala, or Tamil).
+ *
+ * @param codeOrName - 5-digit postal code or city name.
+ * @param options - Query options including language selection.
+ *
+ * @example
+ * getCity('00100') // => Colombo 1
+ * getCity('Kandy') // => Kandy
+ */
+export function getCity(codeOrName: string | number, options?: QueryOptions): City | undefined {
+  if (codeOrName === undefined || codeOrName === null) return undefined;
+  const str = String(codeOrName).trim();
+  if (/^\d{1,5}$/.test(str)) {
+    return getCityByPostalCode(str, options?.lang);
+  }
+  return getCityByName(str, options);
+}
+
+/**
  * Resolves the 5-digit postal code for a given city name (English, Sinhala, or Tamil).
  *
  * @param cityName - Name of the city or town.
@@ -147,13 +213,21 @@ export function lookupAllByPostalCode(postalCode: string | number, options?: Que
  * @example
  * getPostalCode('Athurugiriya') // => "10150"
  * getPostalCode('Colombo 1')    // => "00100"
+ * getPostalCode('Colombo 01')   // => "00100"
  * getPostalCode('මහනුවර')      // => "20000"
+ * getPostalCode('කොළඹ')        // => "00100"
  */
 export function getPostalCode(cityName: string): string | undefined {
   if (!cityName || typeof cityName !== 'string') return undefined;
   const raw = cityName.trim();
   const directMatch = CITY_NAME_MAP.get(raw);
   if (directMatch) return directMatch.postal_code;
+
+  // Handle number zero padding variations across scripts (e.g. "Colombo 01" -> "Colombo 1", "කොළඹ 01" -> "කොළඹ 1")
+  const strippedNumber = raw.replace(/(\s+)0+(\d+)/, '$1$2');
+  if (CITY_NAME_MAP.has(strippedNumber)) {
+    return CITY_NAME_MAP.get(strippedNumber)!.postal_code;
+  }
 
   let norm = raw.toLowerCase().replace(/[^a-z0-9]/g, '');
   const match = CITY_NAME_MAP.get(norm);
@@ -272,6 +346,8 @@ export function search(query: string, options?: SearchOptions): City[] {
   if (!query || !query.trim()) return [];
   const rawQuery = query.trim();
   const q = rawQuery.toLowerCase();
+  const qNorm = q.replace(/(\s+)0+(\d+)/, '$1$2');
+  const rawNorm = rawQuery.replace(/(\s+)0+(\d+)/, '$1$2');
   const limit = options?.limit ?? 15;
   const lang = options?.lang || 'en';
 
@@ -299,20 +375,37 @@ export function search(query: string, options?: SearchOptions): City[] {
     const nameEn = c.name_en.toLowerCase();
     let score = 0;
 
-    if (nameEn === q || c.name_si === rawQuery || c.name_ta === rawQuery) {
+    if (
+      nameEn === q ||
+      nameEn === qNorm ||
+      c.name_si === rawQuery ||
+      c.name_si === rawNorm ||
+      c.name_ta === rawQuery ||
+      c.name_ta === rawNorm
+    ) {
       score = 100;
     } else if (c.postal_code === q) {
       score = 95;
-    } else if (nameEn.startsWith(q)) {
+    } else if (nameEn.startsWith(q) || nameEn.startsWith(qNorm)) {
+      score = 80;
+    } else if (
+      c.name_si.startsWith(rawQuery) ||
+      c.name_si.startsWith(rawNorm) ||
+      c.name_ta.startsWith(rawQuery) ||
+      c.name_ta.startsWith(rawNorm)
+    ) {
       score = 80;
     } else if (c.postal_code.startsWith(q)) {
       score = 70;
-    } else if (c.name_si.startsWith(rawQuery) || c.name_ta.startsWith(rawQuery)) {
-      score = 65;
-    } else if (nameEn.includes(q)) {
+    } else if (nameEn.includes(q) || nameEn.includes(qNorm)) {
       score = 50;
-    } else if (c.name_si.includes(rawQuery) || c.name_ta.includes(rawQuery)) {
-      score = 45;
+    } else if (
+      c.name_si.includes(rawQuery) ||
+      c.name_si.includes(rawNorm) ||
+      c.name_ta.includes(rawQuery) ||
+      c.name_ta.includes(rawNorm)
+    ) {
+      score = 50;
     } else if (c.district.toLowerCase() === q || c.district_abbr.toLowerCase() === q) {
       score = 25;
     } else if (c.district.toLowerCase().includes(q)) {
@@ -349,4 +442,209 @@ export function search(query: string, options?: SearchOptions): City[] {
 
   return results;
 }
+
+/**
+ * Calculates the great-circle distance between two geographic coordinates or cities
+ * in kilometers using the Haversine formula.
+ *
+ * @param from - Origin coordinate or City object.
+ * @param to - Destination coordinate or City object.
+ * @returns Distance in kilometers rounded to 2 decimal places, or null if coordinates are missing.
+ *
+ * @example
+ * getDistance({ latitude: 6.9271, longitude: 79.8612 }, { latitude: 7.2906, longitude: 80.6337 })
+ * // => ~95.14 km (Colombo to Kandy)
+ */
+export function getDistance(
+  from: { latitude: number | null; longitude: number | null },
+  to: { latitude: number | null; longitude: number | null }
+): number | null {
+  if (
+    from.latitude === null ||
+    from.latitude === undefined ||
+    from.longitude === null ||
+    from.longitude === undefined ||
+    to.latitude === null ||
+    to.latitude === undefined ||
+    to.longitude === null ||
+    to.longitude === undefined
+  ) {
+    return null;
+  }
+
+  const R = 6371; // Earth's mean radius in kilometers
+  const dLat = ((to.latitude - from.latitude) * Math.PI) / 180;
+  const dLng = ((to.longitude - from.longitude) * Math.PI) / 180;
+  const lat1 = (from.latitude * Math.PI) / 180;
+  const lat2 = (to.latitude * Math.PI) / 180;
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLng / 2) * Math.sin(dLng / 2) * Math.cos(lat1) * Math.cos(lat2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c;
+
+  return Math.round(distance * 100) / 100;
+}
+
+/**
+ * Finds the closest Sri Lankan city, town, or post office to the given GPS coordinates.
+ *
+ * @param coordsOrLat - Coordinates object or latitude number.
+ * @param lngOrOptions - Longitude number (if lat provided) or NearestCityOptions.
+ * @param options - NearestCityOptions (if lat & lng provided separately).
+ * @returns City object with distanceKm property, or undefined if no city found within maxDistance.
+ *
+ * @example
+ * getNearestCity(6.9271, 79.8612) // => Colombo 1 (~0.4 km)
+ * getNearestCity({ latitude: 7.2906, longitude: 80.6337 }) // => Kandy
+ */
+export function getNearestCity(
+  coordsOrLat: number | { latitude: number; longitude: number },
+  lngOrOptions?: number | NearestCityOptions,
+  options?: NearestCityOptions
+): CityWithDistance | undefined {
+  let lat: number;
+  let lng: number;
+  let opts: NearestCityOptions | undefined;
+
+  if (typeof coordsOrLat === 'object') {
+    lat = coordsOrLat.latitude;
+    lng = coordsOrLat.longitude;
+    opts = typeof lngOrOptions === 'object' ? lngOrOptions : undefined;
+  } else {
+    lat = coordsOrLat;
+    lng = typeof lngOrOptions === 'number' ? lngOrOptions : 0;
+    opts = options;
+  }
+
+  if (typeof lat !== 'number' || typeof lng !== 'number' || isNaN(lat) || isNaN(lng)) {
+    return undefined;
+  }
+
+  const maxDist = opts?.maxDistanceKm ?? Infinity;
+  let closest: City | undefined;
+  let minDistance = Infinity;
+
+  const targetCoords = { latitude: lat, longitude: lng };
+
+  for (const c of CITIES) {
+    if (c.latitude === null || c.longitude === null) continue;
+
+    if (opts?.district) {
+      const dNorm = opts.district.trim().toLowerCase();
+      if (
+        c.district.toLowerCase() !== dNorm &&
+        c.district_abbr.toLowerCase() !== dNorm &&
+        c.district_code !== dNorm
+      ) {
+        continue;
+      }
+    }
+
+    if (opts?.province) {
+      const pNorm = opts.province.trim().toLowerCase();
+      if (c.province.toLowerCase() !== pNorm && c.province_code.toLowerCase() !== pNorm) {
+        continue;
+      }
+    }
+
+    const dist = getDistance(targetCoords, { latitude: c.latitude, longitude: c.longitude });
+    if (dist !== null && dist < minDistance && dist <= maxDist) {
+      minDistance = dist;
+      closest = c;
+    }
+  }
+
+  if (!closest) return undefined;
+
+  const lang = opts?.lang;
+  return {
+    ...closest,
+    name: lang === 'si' ? closest.name_si : lang === 'ta' ? closest.name_ta : closest.name_en,
+    distanceKm: minDistance
+  };
+}
+
+/**
+ * Finds all Sri Lankan cities and post offices within a given radius (in km) from a coordinate.
+ * Results are sorted in ascending order by distance.
+ *
+ * @param coordsOrLat - Coordinates object or latitude number.
+ * @param lngOrRadius - Longitude number (if lat provided) or radius in kilometers.
+ * @param radiusOrOptions - Radius in km (if lat/lng provided) or RadiusSearchOptions.
+ * @param options - RadiusSearchOptions if lat, lng, and radius provided.
+ * @returns Array of matching cities with distanceKm, sorted closest to farthest.
+ *
+ * @example
+ * getCitiesWithinRadius(6.9271, 79.8612, 10) // Cities within 10 km of Colombo
+ */
+export function getCitiesWithinRadius(
+  coordsOrLat: number | { latitude: number; longitude: number },
+  lngOrRadius: number,
+  radiusOrOptions?: number | RadiusSearchOptions,
+  options?: RadiusSearchOptions
+): CityWithDistance[] {
+  let lat: number;
+  let lng: number;
+  let radiusKm: number;
+  let opts: RadiusSearchOptions | undefined;
+
+  if (typeof coordsOrLat === 'object') {
+    lat = coordsOrLat.latitude;
+    lng = coordsOrLat.longitude;
+    radiusKm = lngOrRadius;
+    opts = typeof radiusOrOptions === 'object' ? radiusOrOptions : undefined;
+  } else {
+    lat = coordsOrLat;
+    lng = lngOrRadius;
+    radiusKm = typeof radiusOrOptions === 'number' ? radiusOrOptions : 10;
+    opts = options;
+  }
+
+  if (typeof lat !== 'number' || typeof lng !== 'number' || isNaN(lat) || isNaN(lng) || radiusKm <= 0) {
+    return [];
+  }
+
+  const limit = opts?.limit ?? 50;
+  const lang = opts?.lang;
+  const targetCoords = { latitude: lat, longitude: lng };
+  const matches: CityWithDistance[] = [];
+
+  for (const c of CITIES) {
+    if (c.latitude === null || c.longitude === null) continue;
+
+    if (opts?.district) {
+      const dNorm = opts.district.trim().toLowerCase();
+      if (
+        c.district.toLowerCase() !== dNorm &&
+        c.district_abbr.toLowerCase() !== dNorm &&
+        c.district_code !== dNorm
+      ) {
+        continue;
+      }
+    }
+
+    if (opts?.province) {
+      const pNorm = opts.province.trim().toLowerCase();
+      if (c.province.toLowerCase() !== pNorm && c.province_code.toLowerCase() !== pNorm) {
+        continue;
+      }
+    }
+
+    const dist = getDistance(targetCoords, { latitude: c.latitude, longitude: c.longitude });
+    if (dist !== null && dist <= radiusKm) {
+      matches.push({
+        ...c,
+        name: lang === 'si' ? c.name_si : lang === 'ta' ? c.name_ta : c.name_en,
+        distanceKm: dist
+      });
+    }
+  }
+
+  matches.sort((a, b) => a.distanceKm - b.distanceKm);
+
+  return matches.slice(0, limit);
+}
+
 

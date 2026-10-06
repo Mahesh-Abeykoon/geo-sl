@@ -3,10 +3,13 @@ import {
   validateNIC,
   parseNIC,
   convertOldNICToNew,
+  convertNewNICToOld,
   validatePhone,
   parsePhone,
   formatPhone,
-  validatePostalCode
+  validatePostalCode,
+  validateDrivingLicense,
+  validatePassport
 } from '../src/index';
 
 describe('Sri Lankan NIC Validator & Parser', () => {
@@ -33,7 +36,7 @@ describe('Sri Lankan NIC Validator & Parser', () => {
     expect(res?.birthDate).toBe('1992-05-31');
   });
 
-  it('should parse valid New 12-digit NIC', () => {
+  it('should parse valid New 12-digit NIC and determine voting age', () => {
     // 200021301234 -> Year 2000, Day 213
     const res = parseNIC('200021301234');
     expect(res).not.toBeNull();
@@ -42,6 +45,7 @@ describe('Sri Lankan NIC Validator & Parser', () => {
     expect(res?.birthYear).toBe(2000);
     expect(res?.gender).toBe('male');
     expect(res?.birthDate).toBe('2000-07-31');
+    expect(res?.canVote).toBe(true);
   });
 
   it('should reject invalid NIC formats', () => {
@@ -55,6 +59,15 @@ describe('Sri Lankan NIC Validator & Parser', () => {
     const converted = convertOldNICToNew('952134567V');
     expect(converted).toBe('199521304567');
   });
+
+  it('should convert New 12-digit NIC back to Old format for pre-2000 citizens', () => {
+    const converted = convertNewNICToOld('199521304567');
+    expect(converted).toBe('952134567V');
+
+    // Citizens born in 2000 or later cannot be converted to old format
+    expect(convertNewNICToOld('200021301234')).toBeNull();
+    expect(convertNewNICToOld('invalid')).toBeNull();
+  });
 });
 
 describe('Sri Lankan Phone Validator & Formatter', () => {
@@ -66,10 +79,34 @@ describe('Sri Lankan Phone Validator & Formatter', () => {
     expect(res1?.operator).toBe('Dialog');
     expect(res1?.formatted.international).toBe('+94 77 123 4567');
     expect(res1?.formatted.e164).toBe('+94771234567');
+    expect(res1?.formatted.rfc3966).toBe('tel:+94-77-123-4567');
 
     const res2 = parsePhone('+94 76 987 6543');
     expect(res2?.isValid).toBe(true);
     expect(res2?.operator).toBe('Dialog');
+  });
+
+  it('should handle international parenthesized zero notation and dot formats', () => {
+    // International standard notation with redundant (0)
+    const resParentheses = parsePhone('+94 (0) 77 123 4567');
+    expect(resParentheses?.isValid).toBe(true);
+    expect(resParentheses?.number).toBe('771234567');
+    expect(resParentheses?.operator).toBe('Dialog');
+
+    // Leading 0 right after +94
+    const resZero = parsePhone('+940771234567');
+    expect(resZero?.isValid).toBe(true);
+    expect(resZero?.number).toBe('771234567');
+
+    // Dot-separated notation
+    const resDots = parsePhone('077.123.4567');
+    expect(resDots?.isValid).toBe(true);
+    expect(resDots?.number).toBe('771234567');
+
+    // 0094 prefix with leading zero
+    const res0094 = parsePhone('00940771234567');
+    expect(res0094?.isValid).toBe(true);
+    expect(res0094?.number).toBe('771234567');
   });
 
   it('should validate and parse Mobitel mobile numbers', () => {
@@ -79,15 +116,25 @@ describe('Sri Lankan Phone Validator & Formatter', () => {
     expect(res?.formatted.local).toBe('071 234 5678');
   });
 
-  it('should validate and identify fixed line area codes', () => {
-    const res = parsePhone('0112345678'); // Colombo
+  it('should validate and identify fixed line area codes and operators', () => {
+    const res = parsePhone('0112345678'); // Colombo, SLT
     expect(res?.isValid).toBe(true);
     expect(res?.type).toBe('fixed');
     expect(res?.area).toBe('Colombo');
+    expect(res?.operator).toBe('SLT');
+
+    const dialogFixed = parsePhone('0114345678'); // Colombo, Dialog
+    expect(dialogFixed?.isValid).toBe(true);
+    expect(dialogFixed?.operator).toBe('Dialog');
+
+    const lankaBellFixed = parsePhone('0115345678'); // Colombo, Lanka Bell
+    expect(lankaBellFixed?.isValid).toBe(true);
+    expect(lankaBellFixed?.operator).toBe('Lanka Bell');
 
     const kandyRes = parsePhone('0812345678'); // Kandy
     expect(kandyRes?.isValid).toBe(true);
     expect(kandyRes?.area).toBe('Kandy');
+    expect(kandyRes?.operator).toBe('SLT');
   });
 
   it('should reject invalid phone numbers', () => {
@@ -100,6 +147,7 @@ describe('Sri Lankan Phone Validator & Formatter', () => {
     expect(formatPhone('0771234567', 'e164')).toBe('+94771234567');
     expect(formatPhone('0771234567', 'international')).toBe('+94 77 123 4567');
     expect(formatPhone('+94771234567', 'local')).toBe('077 123 4567');
+    expect(formatPhone('0771234567', 'rfc3966')).toBe('tel:+94-77-123-4567');
   });
 });
 
@@ -113,3 +161,38 @@ describe('Postal Code Validator', () => {
     expect(validatePostalCode('123456')).toBe(false);
   });
 });
+
+describe('KYC Identity Documents (Driving License & Passport)', () => {
+  it('should validate Sri Lankan driving license numbers', () => {
+    // Legacy format (Letter + 7 digits)
+    expect(validateDrivingLicense('B1234567')).toBe(true);
+    expect(validateDrivingLicense('b1234567')).toBe(true);
+    expect(validateDrivingLicense('A7654321')).toBe(true);
+
+    // Smart card format (8 digits)
+    expect(validateDrivingLicense('12345678')).toBe(true);
+
+    // Invalid formats
+    expect(validateDrivingLicense('')).toBe(false);
+    expect(validateDrivingLicense('1234567')).toBe(false);
+    expect(validateDrivingLicense('AB123456')).toBe(false);
+  });
+
+  it('should validate Sri Lankan passport numbers', () => {
+    // Ordinary passport (N + 7 digits)
+    expect(validatePassport('N1234567')).toBe(true);
+    expect(validatePassport('n1234567')).toBe(true);
+
+    // Diplomatic passport (D + 7 digits)
+    expect(validatePassport('D0123456')).toBe(true);
+
+    // Official passport (O + 7 digits)
+    expect(validatePassport('O7654321')).toBe(true);
+
+    // Invalid passports
+    expect(validatePassport('')).toBe(false);
+    expect(validatePassport('1234567')).toBe(false);
+    expect(validatePassport('P1234567')).toBe(false);
+  });
+});
+

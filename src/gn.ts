@@ -1,4 +1,5 @@
 import gnData from './data/gn.json';
+import { getDistrictsByProvince } from './districts';
 import type { GNDivision, GNSearchOptions, Language, QueryOptions } from './types';
 
 export const GN_DIVISIONS: readonly GNDivision[] = Object.freeze(
@@ -117,7 +118,30 @@ export function findGNByCode(code: string, options?: QueryOptions): GNDivision |
 }
 
 /**
+ * Returns all Grama Niladhari divisions within a province.
+ *
+ * @param province - Province code (e.g. 'WP') or province name (e.g. 'Western').
+ * @param options - Query options including language selection.
+ */
+export function getGNDivisionsByProvince(province: string, options?: QueryOptions): readonly GNDivision[] {
+  if (!province) return [];
+  const districts = getDistrictsByProvince(province);
+  if (districts.length === 0) return [];
+  const distNames = new Set(districts.map((d) => d.name_en.toLowerCase()));
+
+  const list = GN_DIVISIONS.filter((g) => distNames.has(g.district.toLowerCase()));
+  const lang = options?.lang;
+  if (!lang || lang === 'en') return list;
+
+  return list.map((gn) => ({
+    ...gn,
+    name: lang === 'si' ? gn.name_si : lang === 'ta' ? gn.name_ta : gn.name_en
+  }));
+}
+
+/**
  * Searches Grama Niladhari divisions by name (English, Sinhala, Tamil) or GN code.
+ * Uses relevance scoring to rank exact matches and prefixes before partial substrings.
  *
  * @param query - Search term.
  * @param options - Search options including limit, division, district, and language.
@@ -125,11 +149,12 @@ export function findGNByCode(code: string, options?: QueryOptions): GNDivision |
 export function searchGN(query: string, options?: GNSearchOptions): GNDivision[] {
   if (!query || query.trim() === '') return [];
 
-  const cleanQuery = query.trim().toLowerCase();
+  const rawQuery = query.trim();
+  const cleanQuery = rawQuery.toLowerCase();
   const limit = options?.limit ?? 20;
   const lang = options?.lang || 'en';
 
-  const results: GNDivision[] = [];
+  const scored: Array<{ gn: GNDivision; score: number }> = [];
 
   for (const gn of GN_DIVISIONS) {
     if (options?.district && gn.district.toLowerCase() !== options.district.toLowerCase()) {
@@ -139,23 +164,47 @@ export function searchGN(query: string, options?: GNSearchOptions): GNDivision[]
       continue;
     }
 
-    const matchEn = gn.name_en.toLowerCase().includes(cleanQuery);
-    const matchSi = gn.name_si.includes(cleanQuery);
-    const matchTa = gn.name_ta.includes(cleanQuery);
-    const matchCode = gn.code.toLowerCase().includes(cleanQuery);
+    const nameEn = gn.name_en.toLowerCase();
+    const codeLower = gn.code.toLowerCase();
+    let score = 0;
 
-    if (matchEn || matchSi || matchTa || matchCode) {
-      results.push(
-        lang === 'en'
-          ? gn
-          : {
-              ...gn,
-              name: lang === 'si' ? gn.name_si : lang === 'ta' ? gn.name_ta : gn.name_en
-            }
-      );
-
-      if (results.length >= limit) break;
+    if (nameEn === cleanQuery || gn.name_si === rawQuery || gn.name_ta === rawQuery || codeLower === cleanQuery) {
+      score = 100;
+    } else if (nameEn.startsWith(cleanQuery) || gn.name_si.startsWith(rawQuery) || gn.name_ta.startsWith(rawQuery)) {
+      score = 80;
+    } else if (codeLower.startsWith(cleanQuery)) {
+      score = 75;
+    } else if (nameEn.includes(cleanQuery) || gn.name_si.includes(rawQuery) || gn.name_ta.includes(rawQuery)) {
+      score = 50;
+    } else if (codeLower.includes(cleanQuery)) {
+      score = 40;
     }
+
+    if (score > 0) {
+      scored.push({ gn, score });
+    }
+  }
+
+  scored.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    if (a.gn.name_en.length !== b.gn.name_en.length) {
+      return a.gn.name_en.length - b.gn.name_en.length;
+    }
+    return a.gn.name_en.localeCompare(b.gn.name_en);
+  });
+
+  const results: GNDivision[] = [];
+  const max = Math.min(scored.length, limit);
+  for (let i = 0; i < max; i++) {
+    const gn = scored[i].gn;
+    results.push(
+      lang === 'en'
+        ? gn
+        : {
+            ...gn,
+            name: lang === 'si' ? gn.name_si : lang === 'ta' ? gn.name_ta : gn.name_en
+          }
+    );
   }
 
   return results;
@@ -188,6 +237,12 @@ export const getVillagesByDivision = getGNDivisionsByDSD;
 export const getVillagesByDistrict = getGNDivisionsByDistrict;
 
 /**
+ * Alias for getGNDivisionsByProvince.
+ * Returns all villages within a province.
+ */
+export const getVillagesByProvince = getGNDivisionsByProvince;
+
+/**
  * Alias for findGNByCode.
  * Finds a village by its official GN code.
  */
@@ -198,4 +253,5 @@ export const findVillageByCode = findGNByCode;
  * Searches villages across English, Sinhala, Tamil, or GN code.
  */
 export const searchVillages = searchGN;
+
 

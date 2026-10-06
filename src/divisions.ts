@@ -77,3 +77,37 @@ export function getDivisionsByProvince(
     name: lang === 'si' ? d.name_si : lang === 'ta' ? d.name_ta : d.name_en
   }));
 }
+
+const DIVISION_NAME_MAP = new Map<string, Division>();
+for (const d of DIVISIONS) {
+  DIVISION_NAME_MAP.set(d.name_en.toLowerCase(), d);
+  DIVISION_NAME_MAP.set(d.name_si.trim(), d);
+  DIVISION_NAME_MAP.set(d.name_ta.trim(), d);
+}
+
+/**
+ * Finds a Divisional Secretariat (DS) division by name (English, Sinhala, or Tamil).
+ *
+ * @param name - Division name (e.g. 'Colombo', 'මහනුවර', 'கண்டி').
+ * @param options - Query options including language selection.
+ *
+ * @example
+ * getDivision('Colombo') // => Colombo Division
+ * getDivision('කඩුවෙල')  // => Kaduwela Division
+ */
+export function getDivision(
+  name: string,
+  options?: QueryOptions
+): (Division & { name: string }) | undefined {
+  if (!name || typeof name !== 'string') return undefined;
+  const raw = name.trim();
+  const d = DIVISION_NAME_MAP.get(raw.toLowerCase()) || DIVISION_NAME_MAP.get(raw);
+  if (!d) return undefined;
+
+  const lang = options?.lang || 'en';
+  return {
+    ...d,
+    name: lang === 'si' ? d.name_si : lang === 'ta' ? d.name_ta : d.name_en
+  };
+}
+

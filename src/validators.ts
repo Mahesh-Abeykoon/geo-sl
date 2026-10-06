@@ -20,6 +20,7 @@ export interface ParsedPhone {
     international: string;
     local: string;
     e164: string;
+    rfc3966: string;
   };
 }
 
@@ -89,6 +90,10 @@ export function parseNIC(nic: string): ParsedNIC | null {
     age--;
   }
 
+  if (format === 'new' && canVote === undefined) {
+    canVote = age >= 18;
+  }
+
   return {
     isValid: true,
     nic: cleaned,
@@ -124,6 +129,27 @@ export function convertOldNICToNew(oldNic: string): string | null {
   return `19${digits.slice(0, 5)}0${digits.slice(5, 9)}`;
 }
 
+/**
+ * Converts a 12-digit New NIC format (e.g. '199521304567') back to the 10-character Old standard (e.g. '952134567V').
+ * Applicable for citizens born between 1900 and 1999 whose 12-digit NIC contains the converted '0' separator.
+ *
+ * @param newNic - 12-digit NIC string.
+ * @returns 10-character Old NIC string with 'V', or null if invalid or ineligible (e.g. born in 2000 or later).
+ */
+export function convertNewNICToOld(newNic: string): string | null {
+  const parsed = parseNIC(newNic);
+  if (!parsed || parsed.format !== 'new') return null;
+  if (parsed.birthYear < 1900 || parsed.birthYear > 1999) return null;
+
+  const digits = parsed.nic;
+  if (digits.length !== 12 || digits[7] !== '0') return null;
+
+  const yy = digits.slice(2, 4);
+  const ddd = digits.slice(4, 7);
+  const serial = digits.slice(8, 12);
+  return `${yy}${ddd}${serial}V`;
+}
+
 const MOBILE_OPERATORS: Record<string, string> = {
   '70': 'Mobitel',
   '71': 'Mobitel',
@@ -133,6 +159,14 @@ const MOBILE_OPERATORS: Record<string, string> = {
   '76': 'Dialog',
   '77': 'Dialog',
   '78': 'Hutch'
+};
+
+const FIXED_OPERATORS: Record<string, string> = {
+  '2': 'SLT',
+  '3': 'SLT',
+  '4': 'Dialog',
+  '5': 'Lanka Bell',
+  '7': 'Dialog'
 };
 
 const AREA_CODES: Record<string, string> = {
@@ -169,7 +203,8 @@ const AREA_CODES: Record<string, string> = {
 
 /**
  * Parses and validates Sri Lankan telephone numbers (mobile and fixed-line).
- * Supports international (+94), local (07X, 011), and plain 9-digit formats.
+ * Supports international (+94, 0094), local (07X, 011), format variations with parentheses like +94 (0) 77...,
+ * and plain 9-digit formats.
  *
  * @param phone - Phone number string.
  * @returns ParsedPhone object or null if invalid.
@@ -177,17 +212,20 @@ const AREA_CODES: Record<string, string> = {
 export function parsePhone(phone: string): ParsedPhone | null {
   if (!phone || typeof phone !== 'string') return null;
 
-  // Remove whitespace, dashes, parentheses
-  let digits = phone.replace(/[\s\-()]/g, '');
+  // Remove whitespace, dashes, parentheses, dots, slashes
+  let digits = phone.replace(/[\s\-()./]/g, '');
 
-  // Handle +94 prefix
+  // Handle +94 / 0094 / 94 prefix
   if (digits.startsWith('+94')) {
     digits = digits.slice(3);
   } else if (digits.startsWith('0094')) {
     digits = digits.slice(4);
   } else if (digits.startsWith('94')) {
     digits = digits.slice(2);
-  } else if (digits.startsWith('0')) {
+  }
+
+  // Strip leading 0 (e.g. 077..., or +94 (0) 77..., or +94077...)
+  if (digits.startsWith('0')) {
     digits = digits.slice(1);
   }
 
@@ -208,17 +246,21 @@ export function parsePhone(phone: string): ParsedPhone | null {
   const part2 = digits.slice(2, 5);
   const part3 = digits.slice(5);
 
+  const fixedOp = isFixed && digits[2] in FIXED_OPERATORS ? FIXED_OPERATORS[digits[2]] : undefined;
+  const operator = isMobile ? MOBILE_OPERATORS[prefix] : fixedOp;
+
   return {
     isValid: true,
     raw: phone,
     number: digits,
     type: isMobile ? 'mobile' : 'fixed',
-    ...(isMobile ? { operator: MOBILE_OPERATORS[prefix] } : {}),
+    ...(operator ? { operator } : {}),
     ...(isFixed ? { area: AREA_CODES[prefix] } : {}),
     formatted: {
       international: `+94 ${part1} ${part2} ${part3}`,
       local: `0${part1} ${part2} ${part3}`,
-      e164: `+94${digits}`
+      e164: `+94${digits}`,
+      rfc3966: `tel:+94-${part1}-${part2}-${part3}`
     }
   };
 }
@@ -236,12 +278,15 @@ export function validatePhone(phone: string): boolean {
  * Formats a Sri Lankan phone number.
  *
  * @param phone - Phone number string.
- * @param style - Format style ('international' | 'local' | 'e164'). Default is 'local'.
+ * @param style - Format style ('international' | 'local' | 'e164' | 'rfc3966'). Default is 'local'.
  */
-export function formatPhone(phone: string, style: 'international' | 'local' | 'e164' = 'local'): string | null {
+export function formatPhone(
+  phone: string,
+  style: 'international' | 'local' | 'e164' | 'rfc3966' = 'local'
+): string | null {
   const parsed = parsePhone(phone);
   if (!parsed) return null;
-  return parsed.formatted[style];
+  return parsed.formatted[style] || null;
 }
 
 /**
@@ -259,3 +304,38 @@ export function validatePostalCode(postalCode: string): boolean {
   const clean = postalCode.trim();
   return /^\d{5}$/.test(clean);
 }
+
+/**
+ * Validates whether a string matches the Sri Lankan Driving License number format.
+ * Supports legacy format (single letter + 7 digits, e.g. 'B1234567')
+ * and new smart card format (8 digits, e.g. '12345678').
+ *
+ * @param licenseNumber - Driving license string to validate.
+ *
+ * @example
+ * validateDrivingLicense('B1234567') // => true
+ * validateDrivingLicense('12345678') // => true
+ */
+export function validateDrivingLicense(licenseNumber: string): boolean {
+  if (!licenseNumber || typeof licenseNumber !== 'string') return false;
+  const clean = licenseNumber.trim().toUpperCase();
+  return /^[A-Z]\d{7}$|^\d{8}$/.test(clean);
+}
+
+/**
+ * Validates whether a string matches the Sri Lankan Passport number format.
+ * Format: 1 letter ('N' ordinary, 'D' diplomatic, 'O' official, 'M' emergency)
+ * followed by 7 digits (e.g. 'N1234567').
+ *
+ * @param passportNumber - Passport number string to validate.
+ *
+ * @example
+ * validatePassport('N1234567') // => true
+ * validatePassport('D0123456') // => true
+ */
+export function validatePassport(passportNumber: string): boolean {
+  if (!passportNumber || typeof passportNumber !== 'string') return false;
+  const clean = passportNumber.trim().toUpperCase();
+  return /^[NDOM]\d{7}$/.test(clean);
+}
+

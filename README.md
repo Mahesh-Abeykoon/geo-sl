@@ -380,8 +380,10 @@ const branches = getBranches('7010');
 * `getDistrictsByProvince(province: string, options?: { lang?: 'en' | 'si' | 'ta' }): District[]`
 * `getDistrictByCode(code: string, options?: { lang?: 'en' | 'si' | 'ta' }): District | undefined` – alias for `getDistrict`
 
-### Cities & Postal Codes
+### Cities, Postal Codes & Geospatial Utilities
 * `getCities(district?: string, options?: { lang?: 'en' | 'si' | 'ta' }): City[]`
+* `getCity(codeOrName: string | number, options?: { lang?: 'en' | 'si' | 'ta' }): City | undefined` – finds city by 5-digit postal code or city name.
+* `getCityByName(cityName: string, options?: { lang?: 'en' | 'si' | 'ta' }): City | undefined` – primary lookup by name across English, Sinhala, or Tamil.
 * `getCitiesByDistrict(district: string, options?: { lang?: 'en' | 'si' | 'ta' }): City[]`
 * `getCitiesByProvince(province: string, options?: { lang?: 'en' | 'si' | 'ta' }): City[]`
 * `getPostalCode(cityName: string): string | undefined`
@@ -389,36 +391,47 @@ const branches = getBranches('7010');
 * `isValidPostalCode(postalCode: string | number): boolean` – checks existence against the Sri Lanka Post database.
 * `lookupPostalCode(code: string | number, options?: { lang?: 'en' | 'si' | 'ta' }): City | undefined` – alias for `getCityByPostalCode`
 * `lookupAllByPostalCode(code: string | number, options?: { lang?: 'en' | 'si' | 'ta' }): City[]` – returns all offices sharing a postal code.
-* `search(query: string, options?: { limit?: number; lang?: 'en' | 'si' | 'ta'; district?: string; province?: string }): City[]`
+* `search(query: string, options?: { limit?: number; lang?: 'en' | 'si' | 'ta'; district?: string; province?: string }): City[]` – multi-lingual search with zero-padded number normalization and relevance ranking.
+* `getDistance(from, to): number | null` – calculates great-circle distance between two cities or coordinates in kilometers (Haversine formula).
+* `getNearestCity(coordsOrLat, lng?, options?): (City & { distanceKm: number }) | undefined` – reverse-lookup the closest town to GPS coordinates.
+* `getCitiesWithinRadius(coordsOrLat, lng, radiusKm, options?): Array<City & { distanceKm: number }>` – returns cities within delivery radius sorted by proximity.
 
 ### Cascading Hierarchy & Form Helpers
-* `getCascadingData(options?: { lang?: 'en' | 'si' | 'ta' }): CascadingProvince[]` – pre-nested tree (Province ➔ District ➔ Cities).
+* `getCascadingData(options?: { lang?: 'en' | 'si' | 'ta' }): CascadingProvince[]` – pre-nested tree (Province ➔ District ➔ Cities) with localized and trilingual name properties.
 * `getAdministrativeCascadingData(options?: { lang?: 'en' | 'si' | 'ta' }): CascadingAdministrativeProvince[]` – pre-nested tree (Province ➔ District ➔ DS Divisions).
-* `toSelectOptions<T>(items, labelKey, valueKey): SelectOption[]` – universal formatter converting data objects into `{ label, value }` pairs for UI dropdowns.
+* `toSelectOptions<T>(items, labelKey, valueKey): SelectOption[]` – universal formatter converting data objects into `{ label, value }` pairs for UI dropdowns (exported from both root and `geo-sl/types`).
 
 ### Administrative Divisions (MOHA)
 * `getDivisions(district?: string, options?: { lang?: 'en' | 'si' | 'ta' }): Division[]`
+* `getDivision(name: string, options?: { lang?: 'en' | 'si' | 'ta' }): Division | undefined` – finds a DS Division by name (English, Sinhala, Tamil).
 * `getDivisionsByDistrict(district: string, options?: { lang?: 'en' | 'si' | 'ta' }): Division[]`
 * `getDivisionsByProvince(province: string, options?: { lang?: 'en' | 'si' | 'ta' }): Division[]`
 
-### Financial Institutions (CBSL / LankaPay)
+### Financial Institutions & LankaPay Routing (`geo-sl/banks`)
 * `getBanks(): readonly Bank[]`
 * `getBank(codeOrId: string | number): Bank | undefined` – primary lookup by 4-digit CBSL code, ID, or bank name.
 * `getBankByCode(codeOrId: string | number): Bank | undefined` – alias for `getBank`
+* `searchBanks(query: string): Bank[]` – searches banks by name or code.
 * `getBranches(bankCode: string | number): readonly Branch[]`
 * `getBranchByCode(bankCode: string | number, branchCode: string | number): Branch | undefined`
 * `searchBranches(bankCode: string | number, query: string): Branch[]`
+* `searchAllBranches(query: string): Array<Branch & { bankCode: string; bankName: string }>` – searches branches across all 45 banks.
+* `getRoutingNumber(bankCode, branchCode): string` – generates official 7-digit LankaPay routing number (`7010` + `001` ➔ `'7010001'`).
+* `parseRoutingNumber(routingNumber): ParsedRoutingNumber` – decodes 7-digit routing number into `{ isValid, bank, branch }`.
+* `validateRoutingNumber(routingNumber): boolean` – verifies routing number against registered CBSL banks and branches.
 
 ### Grama Niladhari (GN) & Village Divisions (`geo-sl/gn`)
 * `getGNDivisions(options?: { lang?: 'en' | 'si' | 'ta' }): GNDivision[]`
 * `getGNDivisionsByDSD(divisionName: string, options?: { lang?: 'en' | 'si' | 'ta' }): GNDivision[]`
 * `getGNDivisionsByDistrict(districtName: string, options?: { lang?: 'en' | 'si' | 'ta' }): GNDivision[]`
+* `getGNDivisionsByProvince(province: string, options?: { lang?: 'en' | 'si' | 'ta' }): GNDivision[]`
 * `findGNByCode(code: string, options?: { lang?: 'en' | 'si' | 'ta' }): GNDivision | undefined`
-* `searchGN(query: string, options?: { limit?: number; lang?: 'en' | 'si' | 'ta'; district?: string; division?: string }): GNDivision[]`
+* `searchGN(query: string, options?: { limit?: number; lang?: 'en' | 'si' | 'ta'; district?: string; division?: string }): GNDivision[]` – relevance-ranked search across English, Sinhala, Tamil, and GN codes.
 * **Village Aliases:**
   * `getVillages(options?)` – alias for `getGNDivisions`
   * `getVillagesByDivision(divisionName, options?)` – alias for `getGNDivisionsByDSD`
   * `getVillagesByDistrict(districtName, options?)` – alias for `getGNDivisionsByDistrict`
+  * `getVillagesByProvince(province, options?)` – alias for `getGNDivisionsByProvince`
   * `findVillageByCode(code, options?)` – alias for `findGNByCode`
   * `searchVillages(query, options?)` – alias for `searchGN`
   * `VILLAGES` – alias for `GN_DIVISIONS`
@@ -427,10 +440,13 @@ const branches = getBranches('7010');
 * `validateNIC(nic: string): boolean`
 * `parseNIC(nic: string): ParsedNIC | null` – parses birthdate, gender, age, voter eligibility from Old (9+V/X) and New (12 digits) NICs.
 * `convertOldNICToNew(oldNic: string): string | null` – converts 10-character old NIC (9 digits + V/X) to 12-digit new format.
+* `convertNewNICToOld(newNic: string): string | null` – converts 12-digit new NIC back to 10-character old format (9 digits + V) for pre-2000 citizens.
 * `validatePhone(phone: string): boolean`
-* `parsePhone(phone: string): ParsedPhone | null` – parses operator (Dialog, Mobitel, Hutch, Airtel), type (mobile/fixed), and formats.
-* `formatPhone(phone: string, style?: 'international' | 'local' | 'e164'): string | null`
-* `validatePostalCode(code: string): boolean` – validates 5-digit Sri Lankan postal format (ultra-lightweight, zero bundle cost; use `isValidPostalCode()` to verify existence against official postal database).
+* `parsePhone(phone: string): ParsedPhone | null` – parses mobile operators (Dialog, Mobitel, Hutch, Airtel), fixed line operators (SLT, Dialog Broadband, Lanka Bell), parenthesized variations (`+94 (0) 77...`), and dot notation.
+* `formatPhone(phone: string, style?: 'international' | 'local' | 'e164' | 'rfc3966'): string | null`
+* `validatePostalCode(code: string): boolean` – validates 5-digit Sri Lankan postal format.
+* `validateDrivingLicense(licenseNumber: string): boolean` – validates Sri Lankan driving license numbers (legacy category + 7 digits or new 8-digit smart card).
+* `validatePassport(passportNumber: string): boolean` – validates Sri Lankan passport format (`N`/`D`/`O`/`M` + 7 digits).
 
 ### 🏷️ TypeScript Types
 All data types and interfaces are directly exported:
@@ -452,6 +468,11 @@ import type {
   CascadingAdministrativeDivision,
   ParsedNIC,
   ParsedPhone,
+  ParsedRoutingNumber,
+  Coordinates,
+  CityWithDistance,
+  NearestCityOptions,
+  RadiusSearchOptions,
   Language,
   ProvinceCode,
   DistrictCode,
